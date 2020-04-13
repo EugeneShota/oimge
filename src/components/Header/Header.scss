@@ -1,0 +1,76 @@
+$primaryColor: #e9d7c1;
+$secondaryColorA: #898ba1;
+$secondaryColorB: #86a295;
+
+@keyframes fileIsLoading {
+  from {
+    background-position: 2rem 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+.header {
+  background-color: #e9d7c1;
+  background-color: #87a395;
+  //   e6e3df
+  > div {
+    padding: 0.75rem 0;
+  }
+}
+.openFileDDArea {
+  padding-top: 5px;
+  display: inline-block;
+  width: 100%;
+  margin-left: 5px;
+  margin-right: 5px;
+  color: $primaryColor;
+  transition: background ease;
+  // border-style: solid !important;
+  // border-width: 1px;
+  box-shadow: inset 2px 2px 5px #698074b9, 2px 1px 3px #b1c4ba81;
+  label {
+    text-decoration: underline;
+  }
+  label:hover {
+    color: white;
+    cursor: pointer;
+  }
+}
+
+#openFileInput {
+  width: 0.1px;
+  height: 0.1px;
+  z-index: -10;
+}
+.openFileArea {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.fileInfo {
+  display: inline-block;
+
+  padding: 0.75rem 0;
+}
+
+.anim-FileIsLoading {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 2rem 2rem;
+
+  animation-name: fileIsLoading;
+  animation-iteration-count: infinite;
+  animation-duration: 1.25s;
+  animation-timing-function: linear;
+  animation-fill-mode: none;
+}
