@@ -1,54 +1,69 @@
 import React from "react";
+import ReactDOM from "react-dom";
+import fabric from "fabric/dist/fabric.js";
 // import SrcImg from "./noIMG.png";
-import { setInitImg } from "../../main.js";
-// const CANVAS_SIZE = [800, 1000, 1200, 1300];
+// import { setInitImg } from "../../main.js";
 
 function rect(props) {
   const { ctx, x, y, width, height } = props;
   ctx.fillRect(x, y, width, height);
 }
 
-// function setInitImg(props) {
-//   const { ctx, srcImg, typeRepeat, width, height } = props;
-//   let img = new Image();
-//   img.src = "../../../public/noIMG.png";
-//   console.log("setInitImg: " + srcImg);
-//   console.log(img.width);
-//   console.log(img.height);
-//   let aspectRatio = (img.width / img.height).toFixed(15);
-//   console.log("acpRatio " + aspectRatio);
-//   if (img.height > img.width || img.height > height) {
-//     console.log("if");
-//     img.height = img.height > height ? height : img.height;
-//     img.width = img.height * aspectRatio;
-//   } else {
-//     console.log("else");
-//     img.width = img.width > width ? width : img.width;
-//     img.height = img.width / aspectRatio;
-//   }
-//   console.log("width: " + img.width);
-//   console.log("height: " + img.height);
-//   let startDrawImgWidth = (width - img.width) / 2,
-//     startDrawImgHeight = (height - img.height) / 2;
-//   img.onload = function () {
-//     var pattern = ctx.createPattern(img, typeRepeat);
-//     ctx.fillStyle = pattern;
-//     ctx.drawImage(
-//       img,
-//       startDrawImgWidth,
-//       startDrawImgHeight,
-//       img.width,
-//       img.height
-//     );
-//     // ctx.fillRect(20,20,500,500);
-//     // rect({ctx, x: 20, y: 20, width, height});
-//   };
-// }
+function setInitImg(props) {
+  const { ctx, srcImg, typeRepeat, width, height } = props;
+  let img = new Image();
+  img.src = srcImg; //"../public/noIMG.png"
+  console.log("setInitImg: " + srcImg);
+  console.log("width: " + img.width + ", height: " + img.height);
+  let aspectRatio = (img.width / img.height).toFixed(15);
+  console.log("acpRatio " + aspectRatio);
+  if (img.height > img.width || img.height > height) {
+    console.log("if");
+    img.height = img.height > height ? height : img.height;
+    img.width = img.height * aspectRatio;
+  } else {
+    console.log("else");
+    img.width = img.width > width ? width : img.width;
+    img.height = img.width / aspectRatio;
+  }
+  console.log("width: " + img.width + ", height: " + img.height);
+  let startDrawImgWidth = (width - img.width) / 2,
+    startDrawImgHeight = (height - img.height) / 2;
+  img.onload = function () {
+    var pattern = ctx.createPattern(img, typeRepeat);
+    ctx.fillStyle = pattern;
+    ctx.drawImage(
+      img,
+      startDrawImgWidth,
+      startDrawImgHeight,
+      img.width,
+      img.height
+    );
+    // ctx.fillRect(20,20,500,500);
+    // rect({ctx, x: 20, y: 20, width, height});
+
+    // setTimeout(() => {
+    //   console.log("---TimeOut---");
+    //   let canvFabric = new fabric.Canvas();
+    //   let el = ReactDOM.findDOMNode("canv");
+    //   canvFabric.initialize(el, { height: img.height, width: img.width });
+    //   let rectF = new fabric.Rect({
+    //     left: 100,
+    //     top: 100,
+    //     fill: "red",
+    //     width: 20,
+    //     height: 20,
+    //   });
+    //   canvFabric.add(rectF);
+    // }, 5000);
+  };
+}
 
 class CanvasComponent extends React.Component {
-  // constructor(props) {
-  //   super(props);
-  // }
+  constructor(props) {
+    super(props);
+    this.refCanv = React.createRef();
+  }
   componentDidMount() {
     this.updateCanvas(this.props.imgPath);
   }
@@ -71,7 +86,7 @@ class CanvasComponent extends React.Component {
   }
 
   updateCanvas(imgPath) {
-    const canvasR = this.refs.canvas;
+    const canvasR = this.refCanv.current;
     let { canvHeight, canvWidth } = this.initCanvas(canvasR);
     const ctx = canvasR.getContext("2d");
     // ctx.clearRect(0, 0, 300, 300);
@@ -83,8 +98,6 @@ class CanvasComponent extends React.Component {
       width: canvWidth,
       height: canvHeight,
     });
-    // rect({ ctx, x: 10, y: 10, width: 100, height: 100 });
-    // rect({ ctx, x: 610, y: 10, width: 50, height: 50 });
   }
   render() {
     // alert("render Canvas!");
@@ -96,7 +109,7 @@ class CanvasComponent extends React.Component {
     // const imgPath = this.props.imgPath;
     return (
       <div className="canvPlace">
-        <canvas ref="canvas" id="canv" />
+        <canvas ref={this.refCanv} id="canv" />
       </div>
     );
   }

@@ -1,7 +1,7 @@
 import React from "react";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
+// import Container from "react-bootstrap/Container";
+// import Row from "react-bootstrap/Row";
+// import Col from "react-bootstrap/Col";
 
 import "./EditTools.css";
 
@@ -25,7 +25,7 @@ export default class EditTools extends React.Component {
   createBtnTools(arrTools) {
     let bntArr = arrTools.map(function (item, index) {
       return (
-        <div className="btn-tool" data-tool={item}>
+        <div className="btn-tool" key={index} data-tool={item}>
           {index}
         </div>
       );
