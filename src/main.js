@@ -43,8 +43,7 @@ function setInitImg(props) {
   let img = new Image();
   img.src = srcImg; //"../public/noIMG.png"
   console.log("setInitImg: " + srcImg);
-  console.log(img.width);
-  console.log(img.height);
+  console.log("width: " + img.width + ", height: " + img.height);
   let aspectRatio = (img.width / img.height).toFixed(15);
   console.log("acpRatio " + aspectRatio);
   if (img.height > img.width || img.height > height) {
@@ -56,8 +55,7 @@ function setInitImg(props) {
     img.width = img.width > width ? width : img.width;
     img.height = img.width / aspectRatio;
   }
-  console.log("width: " + img.width);
-  console.log("height: " + img.height);
+  console.log("width: " + img.width + ", height: " + img.height);
   let startDrawImgWidth = (width - img.width) / 2,
     startDrawImgHeight = (height - img.height) / 2;
   img.onload = function () {
