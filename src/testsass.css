@@ -7795,7 +7795,9 @@ a.text-dark:hover, a.text-dark:focus {
   padding: 0; }
 
 .canvPlace {
-  width: 100%; }
+  width: 100%;
+  overflow: auto;
+  background-color: #f1ecec; }
 
 .fullHeight {
   height: 100%; }

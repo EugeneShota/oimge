@@ -1,7 +1,6 @@
 const express = require("express");
 const multer = require("multer");
-const fs = require("fs");
-const path = require("path");
+const os = require("os");
 const app = express();
 
 let filePath = __dirname + "../uploads/";
@@ -36,7 +35,7 @@ function newFileName(originalFileName, nameContainer) {
 }
 // const upload = multer({ dest: "uploads" });
 
-app.use("/uploads", express.static(__dirname + "/uploads/"));
+app.use(express.static(__dirname));
 
 app.use(
   multer({ storage: storageConfig, fileFilter: fileFilter }).single("image")
@@ -51,13 +50,6 @@ app.post("/upload", (req, res, next) => {
     res.send({ status: "File not uploaded..." });
   } else {
     console.log(filedata);
-    fs.stat(__dirname + req.url, (err, stats) => {
-      if (err) {
-        console.error(__dirname + "/uploads/");
-        return;
-      }
-      console.log("File Info: " + stats.mode);
-    });
     res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
     // res.send({ filePath: filePath + filedata.path });
     res.send({ filePath: "/uploads/" + filedata.filename });
@@ -67,27 +59,14 @@ app.post("/upload", (req, res, next) => {
   // res.send({ status: "Done" });
 });
 
-app.use("/", (req, res, next) => {
+app.get("/uploads", (req, res, next) => {
   console.log("GET: " + req.url);
-  // fs.stat(__dirname + req.url, (err, stats) => {
-  //   if (err) {
-  //     console.error(err);
-  //     return;
-  //   }
-  //   console.log("File: " + stats.ino);
-  //   // stats.isFile();
-  //   // stats.size();
-  //   // stats;
-  // });
-  // res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
-  // res.sendFile(__dirname + req.url);
-  next();
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.sendFile(__dirname + req.url);
 });
 
 const PORT = process.env.PORT || 9001;
 
 app.listen(PORT, () => {
   console.log("Server listeining port: " + PORT);
-  console.log("Files will be saved to: " + __dirname + "\\uploads");
-  console.log("Folder info: " + fs.readdirSync(__dirname + "\\uploads"));
 });

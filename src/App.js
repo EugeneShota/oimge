@@ -15,12 +15,23 @@ export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      fabricCanvas: undefined,
       imgUploaded: false,
       imgPath: SrcImg,
       tollSelected: false,
       toolId: -1,
     };
     this.imgSetup = this.imgSetup.bind(this);
+    this.initFabricCanvas = this.initFabricCanvas.bind(this);
+  }
+
+  initFabricCanvas(fabricCanv) {
+    if (fabricCanv) {
+      console.log("FabricCanvas init... " + fabricCanv);
+      this.setState({ fabricCanvas: fabricCanv });
+    } else {
+      console.log("fabricCanv - false...");
+    }
   }
 
   imgSetup(img, filePath) {
@@ -41,7 +52,11 @@ export default class App extends React.Component {
             <EditTools />
           </Col>
           <Col sm={11}>
-            <EditArea imgPath={this.state.imgPath} />
+            <EditArea
+              imgPath={this.state.imgPath}
+              initFabricCanvas={this.initFabricCanvas}
+              fabricCanvas={this.state.fabricCanvas}
+            />
           </Col>
         </Row>
         <Row>

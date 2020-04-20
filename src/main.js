@@ -38,39 +38,39 @@ function oneActivBtn(activEl, clName) {
   }
 }
 
-function setInitImg(props) {
-  const { ctx, srcImg, typeRepeat, width, height } = props;
-  let img = new Image();
-  img.src = srcImg; //"../public/noIMG.png"
-  console.log("setInitImg: " + srcImg);
-  console.log("width: " + img.width + ", height: " + img.height);
-  let aspectRatio = (img.width / img.height).toFixed(15);
-  console.log("acpRatio " + aspectRatio);
-  if (img.height > img.width || img.height > height) {
-    console.log("if");
-    img.height = img.height > height ? height : img.height;
-    img.width = img.height * aspectRatio;
-  } else {
-    console.log("else");
-    img.width = img.width > width ? width : img.width;
-    img.height = img.width / aspectRatio;
-  }
-  console.log("width: " + img.width + ", height: " + img.height);
-  let startDrawImgWidth = (width - img.width) / 2,
-    startDrawImgHeight = (height - img.height) / 2;
-  img.onload = function () {
-    var pattern = ctx.createPattern(img, typeRepeat);
-    ctx.fillStyle = pattern;
-    ctx.drawImage(
-      img,
-      startDrawImgWidth,
-      startDrawImgHeight,
-      img.width,
-      img.height
-    );
-    // ctx.fillRect(20,20,500,500);
-    // rect({ctx, x: 20, y: 20, width, height});
-  };
-}
+// function setInitImg(props) {
+//   const { ctx, srcImg, typeRepeat, width, height } = props;
+//   let img = new Image();
+//   img.src = srcImg; //"../public/noIMG.png"
+//   console.log("setInitImg: " + srcImg);
+//   console.log("width: " + img.width + ", height: " + img.height);
+//   let aspectRatio = (img.width / img.height).toFixed(15);
+//   console.log("acpRatio " + aspectRatio);
+//   if (img.height > img.width || img.height > height) {
+//     console.log("if");
+//     img.height = img.height > height ? height : img.height;
+//     img.width = img.height * aspectRatio;
+//   } else {
+//     console.log("else");
+//     img.width = img.width > width ? width : img.width;
+//     img.height = img.width / aspectRatio;
+//   }
+//   console.log("width: " + img.width + ", height: " + img.height);
+//   let startDrawImgWidth = (width - img.width) / 2,
+//     startDrawImgHeight = (height - img.height) / 2;
+//   img.onload = function () {
+//     var pattern = ctx.createPattern(img, typeRepeat);
+//     ctx.fillStyle = pattern;
+//     ctx.drawImage(
+//       img,
+//       startDrawImgWidth,
+//       startDrawImgHeight,
+//       img.width,
+//       img.height
+//     );
+//     // ctx.fillRect(20,20,500,500);
+//     // rect({ctx, x: 20, y: 20, width, height});
+//   };
+// }
 
-export { toggleClassInEl, oneActivBtn, setInitImg };
+export { toggleClassInEl, oneActivBtn };

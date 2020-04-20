@@ -4,26 +4,40 @@ import { Container, Row, Col, Button, ButtonGroup } from "react-bootstrap";
 
 import "./Header.css";
 
-import { toggleClassInEl, oneActivBtn } from "../../main";
+import { toggleClassInEl } from "../../main.js";
 
-import FileInfo from "./FileInfo";
+const IMG_HOST = "http://localhost:9001";
+// import FileInfo from "./FileInfo";
 
 async function uploadFile(file, el, cb) {
   let formData = new FormData();
-  formData.type = "multipart/form-data";
-  console.log(file);
-  formData.append("image", file, "image.png");
+  let tempImg = new Image(file);
+  let tempSImg = new Image();
+  tempSImg.src = file;
+  tempSImg.onload = () => {
+    console.log(
+      ">>> uploadFile: " +
+        file.name +
+        ":" +
+        tempImg.width +
+        "x" +
+        tempImg.height
+    );
+  };
 
-  let respons = await fetch("http://localhost:3001/upload", {
+  console.log(">>> tempS:" + tempSImg.width);
+  formData.type = "multipart/form-data";
+  // console.log(file);
+  formData.append("image", file, "image.png");
+  let respons = await fetch(IMG_HOST + "/upload", {
     method: "POST",
     body: formData,
   });
-
   let result = await respons.json();
   if (respons.ok) {
     console.log("el: " + el);
     toggleClassInEl([el], ["anim-FileIsLoading"]);
-    await cb(file, result.filePath);
+    await cb(file, IMG_HOST + result.filePath);
   } else {
     alert("Oops...");
   }
@@ -46,6 +60,7 @@ export default class Header extends React.Component {
   }
 
   selectFiles(fImgSetup, event) {
+    event.preventDefault();
     let parentEl = event.target.parentNode;
     toggleClassInEl([parentEl], ["anim-FileIsLoading"]);
     uploadFile(event.target.files[0], parentEl, fImgSetup);

@@ -20,7 +20,11 @@ class EditArea extends React.Component {
       <div className="EditArea">
         <Row>
           <Col>
-            <CanvasComponent imgPath={this.props.imgPath} />
+            <CanvasComponent
+              imgPath={this.props.imgPath}
+              initFabricCanvas={this.props.initFabricCanvas}
+              fabricCanvas={this.props.fabricCanvas}
+            />
           </Col>
         </Row>
       </div>
