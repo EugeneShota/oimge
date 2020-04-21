@@ -93,6 +93,13 @@ export default class Header extends React.Component {
         <Row className="">
           <Col sm={2}>
             <div>oIMGe</div>
+            <Button
+              variant="success"
+              size="sm"
+              onClick={this.props.saveEditedImg}
+            >
+              Save
+            </Button>
           </Col>
           {/* <Col sm={4}>
             <FileInfo />

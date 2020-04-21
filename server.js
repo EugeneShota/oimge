@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const app = express();
 
+let regUrlUploads = /\/uploads\/(\d)*-image\.(png|jpg|jpeg)/;
 let filePath = __dirname + "../uploads/";
 let newNameContainer = { oldname: "_", newname: "_" };
 
@@ -35,6 +36,17 @@ function newFileName(originalFileName, nameContainer) {
   return newName;
 }
 // const upload = multer({ dest: "uploads" });
+
+app.get(regUrlUploads, (req, res, next) => {
+  //"/uploads/:imageName.:imageExt"
+  console.log(">> url: " + req.url);
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.setHeader("xyi", "pizda");
+  res.sendFile(__dirname + req.url);
+  // let imageName = req.params["imageName"];
+  // let imageExt = req.params["imageExt"];
+  // console.log(">>> imageName: " + imageName + ". imageExt: " + imageExt);
+});
 
 app.use("/uploads", express.static(__dirname + "/uploads/"));
 

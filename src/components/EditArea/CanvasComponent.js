@@ -5,9 +5,25 @@ import { fabric } from "fabric/dist/fabric.min.js";
 // import SrcImg from "./noIMG.png";
 // import { setInitImg } from "../../main.js";
 
+let fabricCanvas;
+
+function addImgToFabricCanvas(fCanvas, img) {
+  console.log(">>>>>>" + fCanvas.width);
+  let { scaleX, scaleY } = calcScale(img, fCanvas.width, fCanvas.height);
+
+  console.log(
+    ">>f addImg" + img.src + "- scaleW: " + scaleX + " scaleH: " + scaleY
+  );
+  let fImage = new fabric.Image(img, {
+    scaleX: scaleX,
+    scaleY: scaleY,
+  });
+  fCanvas.add(fImage);
+}
+
 function calcScale(img, containerWidth, containerHeight) {
-  let scaleWidth = (containerWidth / img.width).toFixed(3);
-  let scaleHeight = (containerHeight / img.height).toFixed(3);
+  let scaleWidth = (containerWidth / img.width).toFixed(15);
+  let scaleHeight = (containerHeight / img.height).toFixed(15);
   console.log(">>>> scaleX: " + scaleWidth + " - scaleY: " + scaleHeight);
   return { scaleX: scaleWidth, scaleY: scaleHeight };
 }
@@ -28,49 +44,54 @@ function calcAspRatio(img, containerWidth, containerHeight) {
   return { aspectRatio, newWidth, newHeight };
 }
 
+function calcZoomFCanvas(img) {}
+
 function setInitImg(props) {
-  const { fabricCanvas, srcImg, typeRepeat, width, height } = props;
+  const {
+    fabricCanvas,
+    srcImg,
+    typeRepeat,
+    width,
+    height,
+    setImgScale,
+  } = props;
   // создание изображения
   // let img = new Image();
   let img = document.createElement("img");
   console.log(">>>>srcIMG (setInitImg): " + srcImg);
+  img.crossOrigin = "Anonymous";
   img.src = srcImg; //"../public/noIMG.png"
   img.onload = function () {
     console.log("setInitImg: " + srcImg);
     console.log("width: " + img.width + ", height: " + img.height);
     let { aspectRatio, newWidth, newHeight } = calcAspRatio(img, width, height);
-    let { scaleX, scaleY } = calcScale(img, newWidth, newHeight);
+    let { scaleX, scaleY } = calcScale(img, width, height);
     // определение начальной точки для вставки изображения
-    let startDrawImgWidth = (width - newWidth) / 2,
-      startDrawImgHeight = (height - newHeight) / 2;
+    let startDrawImgWidth = (newWidth - img.width * scaleY) / 2,
+      startDrawImgHeight = (img.height - newHeight) / 2;
 
-    console.log(">>> srcImg: " + srcImg);
+    console.log(
+      ">>> srcImg: " + srcImg + " startDrawImgWidth:" + startDrawImgWidth
+    );
+
+    // fabricCanvas.setZoom(scaleY);
 
     fabricCanvas.setBackgroundImage(
       srcImg,
       fabricCanvas.renderAll.bind(fabricCanvas),
       {
         left: startDrawImgWidth,
-        top: startDrawImgHeight,
+        // top: startDrawImgHeight,
         // width: newWidth,
         // height: newHeight,
         originX: "left",
         originY: "top",
-        scaleX: scaleX,
+        scaleX: scaleY,
         scaleY: scaleY,
+        crossOrigin: "anonymous",
       }
     );
-
-    // загрузка изображения на канву
-    // fabric.Image.fromURL(srcImg, function (oImg) {
-    //   console.log(">>> oImg: " + oImg);
-    //   oImg.set({
-    //     left: startDrawImgWidth,
-    //     top: startDrawImgHeight,
-    //   });
-    //   oImg.scale(1 / aspectRatio);
-    //   fabricCanvas.add(oImg);
-    // });
+    // addImgToFabricCanvas(fabricCanvas, img);
 
     setTimeout(() => {
       // console.log("---TimeOut---");
@@ -86,6 +107,7 @@ function setInitImg(props) {
       });
       fabricCanvas.add(rectF);
     }, 2500);
+    // setImgScale(scaleX);
   };
 
   // fabric.Image.fromURL(srcImg, function (imgF) {
@@ -150,7 +172,7 @@ class CanvasComponent extends React.Component {
     canvPlace.style.height = heightCanvPlace + "px";
     canv.height = heightCanvPlace;
     canv.width = canvPlace.offsetWidth;
-    return { canvHeight: heightCanvPlace, canvWidth: canv.width };
+    return { canvHeight: canv.height, canvWidth: canv.width };
   }
 
   initFabricCanvas() {}
@@ -158,12 +180,12 @@ class CanvasComponent extends React.Component {
   updateCanvas(imgPath) {
     const canvasR = this.refCanv.current;
     let { canvHeight, canvWidth } = this.initCanvas(canvasR);
-    let fabricCanvas;
+    // let fabricCanvas;
     // const ctx = canvasR.getContext("2d");
     if (this.props.fabricCanvas) {
       // alert("fabricCanvas - true");
       console.log("fabricCanvas - true");
-      fabricCanvas = this.props.fabricCanvas;
+      // fabricCanvas = this.props.fabricCanvas;
     } else {
       fabricCanvas = new fabric.Canvas("canv");
       this.props.initFabricCanvas(fabricCanvas);
@@ -176,10 +198,11 @@ class CanvasComponent extends React.Component {
       typeRepeat: "repeat",
       width: canvWidth,
       height: canvHeight,
+      setImgScale: this.props.setImgScale,
     });
   }
   render() {
-    console.log("----------------------Render-------------------");
+    console.log("-------Render-------");
     return (
       <div className="canvPlace">
         <canvas ref={this.refCanv} id="canv" />

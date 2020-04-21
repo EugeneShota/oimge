@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const app = express();
 
+const regURL = /\/uploads\/(\d)*-image\.(png|jpg|jpeg)/;
 let filePath = __dirname + "../uploads/";
 let newNameContainer = { oldname: "_", newname: "_" };
 
@@ -50,6 +51,14 @@ app.use("/", (req, res, next) => {
   // res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
   // res.sendFile(__dirname + req.url);
 });
+app.get(/\/uploads\/(\d)*-image\.(png|jpg|jpeg)/, (req, res, next) => {
+  //"/uploads/:imageName.:imageExt"
+  console.log(">> url: " + req.url);
+  // let imageName = req.params["imageName"];
+  // let imageExt = req.params["imageExt"];
+  // console.log(">>> imageName: " + imageName + ". imageExt: " + imageExt);
+  next();
+});
 
 app.use(express.static(__dirname));
 
@@ -65,7 +74,7 @@ app.post("/upload", (req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
     res.send({ status: "File not uploaded..." });
   } else {
-    console.log(filedata);
+    console.log("> " + filedata);
     res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
     // res.send({ filePath: filePath + filedata.path });
     res.send({ filePath: "/uploads/" + filedata.filename });

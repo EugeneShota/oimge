@@ -24,6 +24,7 @@ class EditArea extends React.Component {
               imgPath={this.props.imgPath}
               initFabricCanvas={this.props.initFabricCanvas}
               fabricCanvas={this.props.fabricCanvas}
+              setImgScale={this.props.setImgScale}
             />
           </Col>
         </Row>

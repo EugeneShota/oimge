@@ -18,11 +18,18 @@ export default class App extends React.Component {
       fabricCanvas: undefined,
       imgUploaded: false,
       imgPath: SrcImg,
+      imgScale: 1,
       tollSelected: false,
       toolId: -1,
     };
     this.imgSetup = this.imgSetup.bind(this);
     this.initFabricCanvas = this.initFabricCanvas.bind(this);
+    this.saveEditedImg = this.saveEditedImg.bind(this);
+    this.setImgScale = this.setImgScale.bind(this);
+  }
+
+  setImgScale(scale = 1) {
+    this.setState({ imgScale: scale });
   }
 
   initFabricCanvas(fabricCanv) {
@@ -31,6 +38,49 @@ export default class App extends React.Component {
       this.setState({ fabricCanvas: fabricCanv });
     } else {
       console.log("fabricCanv - false...");
+    }
+  }
+
+  saveEditedImg() {
+    console.log("> saveEditedImg...");
+    if (this.state.fabricCanvas) {
+      console.log("> fabricCanvas exist");
+      this.state.fabricCanvas.discardActiveObject();
+      this.state.fabricCanvas.renderAll();
+      let multiple = (
+        this.state.fabricCanvas.width /
+        +this.state.fabricCanvas.backgroundImage.scaleY / //this.state.fabricCanvas.viewportTransform[0]
+        this.state.fabricCanvas.width
+      ).toFixed(15);
+      alert("scaleX: " + multiple);
+      let dataURL = this.state.fabricCanvas.toDataURL({
+        format: "png",
+        multiplier: multiple,
+      });
+
+      let downloadLink = document.createElement("a");
+      downloadLink.download = "example.png";
+      downloadLink.href = dataURL;
+      downloadLink.click();
+      URL.revokeObjectURL(downloadLink.href);
+      // window.open(dataURL);
+
+      // let canv = document.querySelector("#canv").toBlob((blob) => {
+      //   console.log(blob);
+      //   let downloadLink = document.createElement("a");
+      //   downloadLink.download = "example.png";
+      //   downloadLink.href = URL.createObjectURL(blob);
+      //   downloadLink.click();
+      //   URL.revokeObjectURL(downloadLink.href);
+      // }, "image/png");
+
+      // this.state.fabricCanvas.dispose(); //Clears a canvas and removes all event listeners
+      // this.state.fabricCanvas.clear(); //full clear canvas
+
+      // this.state.fabricCanvas.toBlob((blob) => {
+      //   console.log("> blob: " + blob);
+      // }, "image/png");
+      // window.open(this.state.fabricCanvas.toDataURL("png"));
     }
   }
 
@@ -45,7 +95,7 @@ export default class App extends React.Component {
     return (
       <Container fluid className="App parent-container">
         <Row>
-          <Header imgSetup={this.imgSetup} />
+          <Header imgSetup={this.imgSetup} saveEditedImg={this.saveEditedImg} />
         </Row>
         <Row>
           <Col sm={1}>
@@ -55,6 +105,7 @@ export default class App extends React.Component {
             <EditArea
               imgPath={this.state.imgPath}
               initFabricCanvas={this.initFabricCanvas}
+              setImgScale={this.setImgScale}
               fabricCanvas={this.state.fabricCanvas}
             />
           </Col>
