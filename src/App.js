@@ -26,6 +26,7 @@ export default class App extends React.Component {
     this.initFabricCanvas = this.initFabricCanvas.bind(this);
     this.saveEditedImg = this.saveEditedImg.bind(this);
     this.setImgScale = this.setImgScale.bind(this);
+    this.setSelectedTool = this.setSelectedTool.bind(this);
   }
 
   setImgScale(scale = 1) {
@@ -38,6 +39,12 @@ export default class App extends React.Component {
       this.setState({ fabricCanvas: fabricCanv });
     } else {
       console.log("fabricCanv - false...");
+    }
+  }
+
+  setSelectedTool(tool) {
+    if (tool) {
+      this.setState({ toolSelected: tool });
     }
   }
 
@@ -99,7 +106,7 @@ export default class App extends React.Component {
         </Row>
         <Row>
           <Col sm={1}>
-            <EditTools />
+            <EditTools setSelectedTool={this.setSelectedTool} />
           </Col>
           <Col sm={11}>
             <EditArea

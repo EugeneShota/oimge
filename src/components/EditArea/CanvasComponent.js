@@ -241,6 +241,7 @@ class CanvasComponent extends React.Component {
   }
   componentDidUpdate() {
     // alert("CanvComp componentDidUpdate()");
+    //переделать
     this.updateCanvas(this.props.imgPath);
   }
 
@@ -260,6 +261,7 @@ class CanvasComponent extends React.Component {
 
   initFabricCanvas() {}
 
+  //переделать только под didMount
   updateCanvas(imgPath) {
     const canvasR = this.refCanv.current;
     let { canvHeight, canvWidth } = this.initCanvas(canvasR);
@@ -332,8 +334,7 @@ class CanvasComponent extends React.Component {
       });
       this.props.initFabricCanvas(fabricCanvas);
     }
-    // ctx.clearRect(0, 0, 300, 300);
-    // отобразить "дочерние" компоненты
+    //использовать при обновлении
     setInitImg({
       fabricCanvas,
       srcImg: imgPath,

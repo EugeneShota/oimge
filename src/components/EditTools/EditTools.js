@@ -97,8 +97,22 @@ export default class EditTools extends React.Component {
         default:
           console.log("unknow tool: " + toolType);
       }
+      console.log("> " + event.target.dataset.tool);
 
       toggleClassInEl([tool], ["btn-tool-active"]);
+      // tool.classList.toggle("btn-tool-active");
+    }
+  }
+
+  selectETool(cb, event) {
+    let tool = event.target;
+    if (tool.dataset.tool !== undefined) {
+      let toolType = tool.dataset.tool;
+
+      console.log("> " + event.target.dataset.tool);
+      oneActivBtn(tool, "btn-tool-active");
+      toggleClassInEl([tool], ["btn-tool-active"]);
+      this.props.setSelectedTool(toolType);
       // tool.classList.toggle("btn-tool-active");
     }
   }
@@ -106,10 +120,16 @@ export default class EditTools extends React.Component {
   render() {
     return (
       <div>
-        <div className="group-tools" onClick={this.selectTool}>
+        <div
+          className="group-tools"
+          onClick={this.selectETool.bind(this, this.props.setSelectedTool)}
+        >
           {this.createBtnTools(TOOLS)}
         </div>
-        <div className="group-tools" onClick={this.selectTool}>
+        <div
+          className="group-tools"
+          onClick={this.selectETool.bind(this, this.props.setSelectedTool)}
+        >
           {this.createBtnTools(COLOR_TOOLS)}
         </div>
       </div>
