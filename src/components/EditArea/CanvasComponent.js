@@ -18,13 +18,14 @@ function checkClientCoords(clientXY) {
   return { clientX: 0, clientY: 0 };
 }
 
-function createObjOnFCanv(fCanvas, coords, style, objType = "rect") {
+function createObjOnFCanv(fCanvas, coords, style, objType = "rectangle") {
   switch (objType) {
-    case "rect":
+    case "rectangle":
       activeObjOnFCanv = addRectToFCanv(fCanvas, coords, style);
       break;
     case "circle":
       activeObjOnFCanv = addCircleToFCanv(fCanvas, coords, style);
+      break;
     default:
       console.log("objType is incorrect...");
       break;
@@ -45,7 +46,7 @@ function updateCreatedObjOnFCanv(fCanvas, updatableObj, updatablaData) {
     fabricCanvas,
     createdObjCoords,
     createdObjStyle,
-    createdObjType
+    createdObjType //createdObjType
   );
 
   // fCanvas.discardActiveObject();
@@ -164,70 +165,21 @@ function setInitImg(props) {
     );
     // addImgToFabricCanv(fabricCanvas, img);
 
-    setTimeout(() => {
-      addRectToFCanv(
-        fabricCanvas,
-        { left: 100, top: 200, width: 40, height: 60 },
-        createdObjStyle
-      );
+    // setTimeout(() => {
+    //   addRectToFCanv(
+    //     fabricCanvas,
+    //     { left: 100, top: 200, width: 40, height: 60 },
+    //     createdObjStyle
+    //   );
 
-      createObjOnFCanv(
-        fabricCanvas,
-        { left: 200, top: 220, width: 40, height: 60 },
-        createdObjStyle,
-        "rect"
-      );
-      // console.log("---TimeOut---");
-      // let el = ReactDOM.findDOMNode("canv");
-      // canvFabric.initialize(el, { height: img.height, width: img.width });
-      let rectF = new fabric.Rect({
-        left: 100,
-        top: 100,
-        fill: "red",
-        stroke: "blue",
-        width: 20,
-        height: 20,
-      });
-      fabricCanvas.add(rectF);
-    }, 2500);
-    // setImgScale(scaleX);
+    //   createObjOnFCanv(
+    //     fabricCanvas,
+    //     { left: 200, top: 220, width: 40, height: 60 },
+    //     createdObjStyle,
+    //     "rect"
+    //   );
+    // }, 2500);
   };
-
-  // fabric.Image.fromURL(srcImg, function (imgF) {
-  //   // alert("eree");
-
-  //   // alert("width: " + imgF.width + ", height: " + imgF.height);
-  //   // alert("width: " + img.width + ", height: " + img.height);
-  //   imgF.set({
-  //     left: startDrawImgWidth,
-  //     top: startDrawImgHeight,
-  //     // width: newWidth,
-  //     // height: newHeight,
-  //     originX: "left",
-  //     originY: "top",
-  //     scaleX: scaleX,
-  //     scaleY: scaleY,
-  //   });
-  //   fabricCanvas.setBackgroundImage(
-  //     imgF,
-  //     fabricCanvas.renderAll.bind(fabricCanvas)
-  //   );
-  // });
-
-  //tyt
-
-  // img.onload = function () {
-  //   var pattern = ctx.createPattern(img, typeRepeat);
-  //   ctx.fillStyle = pattern;
-  //   ctx.drawImage(
-  //     img,
-  //     startDrawImgWidth,
-  //     startDrawImgHeight,
-  //     img.width,
-  //     img.height
-  //   );
-
-  // };
 }
 
 class CanvasComponent extends React.Component {
@@ -237,15 +189,21 @@ class CanvasComponent extends React.Component {
   }
   componentDidMount() {
     // alert("CanvComp componentDidMount()");
-    this.updateCanvas(this.props.imgPath);
+    this.mountFabricCanvas(this.props.imgPath);
   }
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     // alert("CanvComp componentDidUpdate()");
     //переделать
-    this.updateCanvas(this.props.imgPath);
+    // this.initFabricCanvas(this.props.imgPath);
+    if (
+      !this.props.toolSelected.toolChange ||
+      prevProps.imgPath !== this.props.imgPath
+    ) {
+      this.updateFabricCanvas(this.props.imgPath);
+    }
   }
 
-  initCanvas(canv) {
+  getSizeOFCanvas(canv) {
     // const canv = document.querySelector("#canv");
     let canvPlace = document.querySelector(".canvPlace");
     let heightParentCont = document.querySelector(".parent-container")
@@ -259,16 +217,26 @@ class CanvasComponent extends React.Component {
     return { canvHeight: canv.height, canvWidth: canv.width };
   }
 
-  initFabricCanvas() {}
+  updateFabricCanvas(imgPath) {
+    const canvasR = this.refCanv.current;
+
+    let { canvHeight, canvWidth } = this.getSizeOFCanvas(canvasR);
+    setInitImg({
+      fabricCanvas,
+      srcImg: imgPath,
+      typeRepeat: "repeat",
+      width: canvWidth,
+      height: canvHeight,
+      setImgScale: this.props.setImgScale,
+    });
+  }
 
   //переделать только под didMount
-  updateCanvas(imgPath) {
+  mountFabricCanvas(imgPath) {
     const canvasR = this.refCanv.current;
-    let { canvHeight, canvWidth } = this.initCanvas(canvasR);
+    let { canvHeight, canvWidth } = this.getSizeOFCanvas(canvasR);
     // let fabricCanvas;
-    // const ctx = canvasR.getContext("2d");
     if (this.props.fabricCanvas) {
-      // alert("fabricCanvas - true");
       console.log("fabricCanvas - true");
       // fabricCanvas = this.props.fabricCanvas;
     } else {
@@ -293,6 +261,7 @@ class CanvasComponent extends React.Component {
           console.log(createdObjCoords);
         }
       });
+
       fabricCanvas.on("mouse:up", (options) => {
         // console.log(
         //   ">> mouse-up: " + options.e.clientX + "x" + options.e.clientY
@@ -327,6 +296,7 @@ class CanvasComponent extends React.Component {
           createdObjCoords = { left: 0, top: 0, width: 1, height: 1 };
         }
       });
+
       fabricCanvas.on("mouse:move", (options) => {
         // console.log(
         //   ">> mouse-move: " + options.e.clientX + "x" + options.e.clientY
@@ -345,6 +315,7 @@ class CanvasComponent extends React.Component {
     });
   }
   render() {
+    createdObjType = this.props.toolSelected.toolOfElements.tool;
     console.log("-------Render-------");
     return (
       <div className="canvPlace">

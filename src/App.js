@@ -19,7 +19,11 @@ export default class App extends React.Component {
       imgUploaded: false,
       imgPath: SrcImg,
       imgScale: 1,
-      tollSelected: false,
+      toolSelected: {
+        toolChange: false,
+        toolOfElements: { tool: "rectangle", toolProperties: {} },
+        toolOfAppearance: { tool: "color", toolProperties: {} },
+      },
       toolId: -1,
     };
     this.imgSetup = this.imgSetup.bind(this);
@@ -42,9 +46,18 @@ export default class App extends React.Component {
     }
   }
 
-  setSelectedTool(tool) {
-    if (tool) {
-      this.setState({ toolSelected: tool });
+  setSelectedTool(tool, toolOf, toolProperties = {}) {
+    if (tool && toolOf) {
+      this.setState((prevState) => ({
+        toolSelected: {
+          ...prevState.toolSelected,
+          toolChange: true,
+          [toolOf]: {
+            tool: tool,
+            toolProperties: toolProperties,
+          },
+        },
+      }));
     }
   }
 
@@ -114,6 +127,7 @@ export default class App extends React.Component {
               initFabricCanvas={this.initFabricCanvas}
               setImgScale={this.setImgScale}
               fabricCanvas={this.state.fabricCanvas}
+              toolSelected={this.state.toolSelected}
             />
           </Col>
         </Row>
