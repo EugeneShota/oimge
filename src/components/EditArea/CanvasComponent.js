@@ -6,9 +6,18 @@ import { fabric } from "fabric/dist/fabric.min.js";
 
 let fabricCanvas;
 let creationObject;
-let activeObjOnFCanv;
-let createdObjType = "circle";
-let createdObjCoords = { left: 0, top: 0, width: 1, height: 1 };
+let activeObjOnFCanv = null;
+let createdObjType = "rectangle";
+let createdObjCoords = {
+  left: 0,
+  top: 0,
+  width: 1,
+  height: 1,
+  startpointX: 0,
+  startpointY: 0,
+  endpointX: 1,
+  endpointY: 1,
+};
 let createdObjStyle = { fillColor: "orange", strokeColor: "green" };
 
 function checkClientCoords(clientXY) {
@@ -23,8 +32,23 @@ function createObjOnFCanv(fCanvas, coords, style, objType = "rectangle") {
     case "rectangle":
       activeObjOnFCanv = addRectToFCanv(fCanvas, coords, style);
       break;
-    case "circle":
-      activeObjOnFCanv = addCircleToFCanv(fCanvas, coords, style);
+    case "ellipse":
+      activeObjOnFCanv = addEllipseToFCanv(fCanvas, coords, style);
+      break;
+    case "line":
+      activeObjOnFCanv = addLineToFCanv(fCanvas, coords, style);
+      break;
+    case "text":
+      activeObjOnFCanv = addTextToFCanv(fCanvas, coords, style); //+text
+      break;
+    case "brush":
+      activeObjOnFCanv = freeDrawingToFCanv(fCanvas, style);
+      break;
+    case "rectangle-attention":
+      activeObjOnFCanv = addPathToFCanv(fCanvas, coords, style);
+      break;
+    case "ellipse-attention":
+      activeObjOnFCanv = addEllipseToFCanv(fCanvas, coords, style, true);
       break;
     default:
       console.log("objType is incorrect...");
@@ -32,10 +56,12 @@ function createObjOnFCanv(fCanvas, coords, style, objType = "rectangle") {
   }
 }
 
-function updateCreatedObjOnFCanv(fCanvas, updatableObj, updatablaData) {
+function updateCreatedObjOnFCanv(fCanvas, updatableObj, newCoords) {
+  if (updatableObj === null) return;
+
   updatableObj.set({
-    width: updatablaData.width,
-    height: updatablaData.height,
+    width: newCoords.width,
+    height: newCoords.height,
   });
 
   //при обновлении объекта изменяется только визуал?
@@ -43,18 +69,60 @@ function updateCreatedObjOnFCanv(fCanvas, updatableObj, updatablaData) {
   fabricCanvas.discardActiveObject();
   fabricCanvas.remove(activeObjOnFCanv);
   createObjOnFCanv(
-    fabricCanvas,
-    createdObjCoords,
+    fCanvas,
+    newCoords,
     createdObjStyle,
     createdObjType //createdObjType
   );
-
+  return null;
   // fCanvas.discardActiveObject();
   // fCanvas.setActiveObject(updatableObj);
   // fCanvas.renderCanvas();
 }
 
-function addRectToFCanv(fCanvas, coords, style) {
+function updateCreatedObjOnMouseMove(
+  fCanvas,
+  updatableObj,
+  newCoords,
+  newStyle,
+  updatableObjType
+) {
+  if (newCoords !== null) {
+    let coords;
+    switch (updatableObjType) {
+      case "line":
+        coords = {
+          x1: newCoords.startpointX,
+          y1: newCoords.startpointY,
+          x2: newCoords.endpointX,
+          y2: newCoords.endpointY,
+        };
+        console.log(coords);
+        break;
+      case "ellipse":
+        coords = {
+          left: newCoords.left,
+          top: newCoords.top,
+          rx: newCoords.width / 2 > 1 ? newCoords.width / 2 : 1,
+          ry: newCoords.height / 2 > 1 ? newCoords.height / 2 : 1,
+        };
+        break;
+      default:
+        coords = newCoords;
+    }
+
+    updatableObj.set(coords);
+  }
+
+  if (newStyle !== null) {
+    updatableObj.set(newStyle);
+  }
+
+  fCanvas.renderAll();
+  return updatableObj;
+}
+
+function addRectToFCanv(fCanvas, coords, style, shadow = false) {
   let rectF = new fabric.Rect({
     left: coords.left,
     top: coords.top,
@@ -64,19 +132,92 @@ function addRectToFCanv(fCanvas, coords, style) {
     height: coords.height,
   });
   fCanvas.add(rectF);
+  // rectF.setShadow({ color: "black", offsetX: 0, offsetY: 0, blur: 100 });
   return rectF;
 }
 
-function addCircleToFCanv(fCanvas, coords, style) {
-  let circleF = new fabric.Circle({
+function addEllipseToFCanv(fCanvas, coords, style, shadow = false) {
+  let circleF = new fabric.Ellipse({
     left: coords.left,
     top: coords.top,
+    rx: coords.width / 2,
+    ry: coords.height / 2,
     fill: style.fillColor,
     stroke: style.strokeColor,
-    radius: coords.width > coords.height ? coords.width / 2 : coords.height / 2,
+    // radius: coords.width > coords.height ? coords.width / 2 : coords.height / 2,
   });
   fCanvas.add(circleF);
   return circleF;
+}
+
+function addLineToFCanv(fCanvas, coords, style) {
+  let lineF = new fabric.Line(
+    [
+      coords.startpointX,
+      coords.startpointY,
+      coords.endpointX,
+      coords.endpointY,
+    ],
+    {
+      fill: style.fillColor,
+      stroke: style.strokeColor,
+    }
+  );
+  fCanvas.add(lineF);
+  return lineF;
+}
+
+function addTextToFCanv(
+  fCanvas,
+  coords,
+  style,
+  text = "Double click to change text..."
+) {
+  let textF = new fabric.IText(text, {
+    left: coords.left,
+    top: coords.top,
+    // width: coords.width,
+    // height: coords.height,
+    fontSize: 20,
+  });
+  fCanvas.add(textF);
+  return textF;
+}
+
+function addPathToFCanv(fCanvas, coords, style) {
+  //передавать тип(прямоугольник\круг) и объект - брать размеры
+  // если ничего не переданно - создаем прямоугольник\круг
+  // в зависимости от типа
+
+  let path1 = "M5,5v350h450V5H5z M352,276.5H102v-200h250V276.5z";
+  let path2 =
+    "M0,0v" +
+    fCanvas.height +
+    "h" +
+    fCanvas.width +
+    "V0Hz M352,276.5H102v-" +
+    coords.height +
+    "h" +
+    coords.width +
+    "V276.5z";
+  //M(координаты для вертикальной левой лении)
+  //v350h450
+  //V(координаты горизонтальной верхней линии)H0z
+  let pathF = new fabric.Path(path2, { opacity: 0.5, selectable: false });
+
+  fCanvas.add(pathF);
+  return pathF;
+}
+
+function freeDrawingToFCanv(fCanvas, style) {
+  if (fCanvas) {
+    fCanvas.isDrawingMode = true;
+    // console.log("color: >" + new fabric.Color("#787878").toRgb());
+    fCanvas.freeDrawingBrush.color = style.fillColor;
+    fCanvas.freeDrawingBrush.width = 5;
+  }
+  console.log("color: >" + new fabric.Color("#787878").toRgb());
+  return true;
 }
 
 function addImgToFabricCanv(fCanvas, img) {
@@ -199,8 +340,13 @@ class CanvasComponent extends React.Component {
       !this.props.toolSelected.toolChange ||
       prevProps.imgPath !== this.props.imgPath
     ) {
-      this.updateFabricCanvas(this.props.imgPath);
+      this.updateFabricCanvas(this.props.imgPath, fabricCanvas, createdObjType);
+    } else {
     }
+    fabricCanvas.isDrawingMode =
+      createdObjType === "brush"
+        ? freeDrawingToFCanv(fabricCanvas, createdObjStyle)
+        : false;
   }
 
   getSizeOFCanvas(canv) {
@@ -217,9 +363,9 @@ class CanvasComponent extends React.Component {
     return { canvHeight: canv.height, canvWidth: canv.width };
   }
 
-  updateFabricCanvas(imgPath) {
+  updateFabricCanvas(imgPath, fabricCanvas, createdObjType) {
     const canvasR = this.refCanv.current;
-
+    fabricCanvas.isDrawingMode = createdObjType === "brush" ? true : false;
     let { canvHeight, canvWidth } = this.getSizeOFCanvas(canvasR);
     setInitImg({
       fabricCanvas,
@@ -246,11 +392,20 @@ class CanvasComponent extends React.Component {
         console.log(">> mouse-down: " + fabricCanvas.getPointer());
         console.log("~~~~ options.target " + options.target);
         console.log("}options" + options.e);
-        if (!options.target) {
+
+        if (!options.target && createdObjType !== "brush") {
+          // && createdObjType !== "brush"
+          // fabricCanvas.isDrawingMode =
+          //   createdObjType === "brush" ? true : false;
           ({
             clientX: createdObjCoords.left,
             clientY: createdObjCoords.top,
           } = checkClientCoords(fabricCanvas.getPointer()));
+
+          createdObjCoords.startpointX = createdObjCoords.left;
+          createdObjCoords.startpointY = createdObjCoords.top;
+          createdObjCoords.endpointX = +createdObjCoords.startpointX + 1;
+          createdObjCoords.endpointY = +createdObjCoords.startpointY + 1;
 
           createObjOnFCanv(
             fabricCanvas,
@@ -267,33 +422,52 @@ class CanvasComponent extends React.Component {
         //   ">> mouse-up: " + options.e.clientX + "x" + options.e.clientY
         // );
         console.log("target: " + fabricCanvas.getPointer());
-        if (!options.target) {
-          let { clientX: x, clientY: y } = checkClientCoords(
-            fabricCanvas.getPointer()
-          );
 
-          if (x < createdObjCoords.left) {
-            createdObjCoords.width = createdObjCoords.left - x;
-            createdObjCoords.left = x;
-          } else {
-            createdObjCoords.width = x - createdObjCoords.left;
+        if (this.props.toolSelected.toolChange && createdObjType !== "brush") {
+          if (!options.target) {
+            let { clientX: x, clientY: y } = checkClientCoords(
+              fabricCanvas.getPointer()
+            );
+
+            // if (x < createdObjCoords.left) {
+            //   createdObjCoords.width = createdObjCoords.left - x;
+            //   createdObjCoords.left = x;
+            // } else {
+            //   createdObjCoords.width = x - createdObjCoords.left;
+            // }
+            // if (y < createdObjCoords.top) {
+            //   createdObjCoords.height = createdObjCoords.top - y;
+            //   createdObjCoords.top = y;
+            // } else {
+            //   createdObjCoords.height = y - createdObjCoords.top;
+            // }
+
+            if (x < createdObjCoords.startpointX) {
+              createdObjCoords.left = x;
+              createdObjCoords.width = createdObjCoords.startpointX - x;
+            } else {
+              createdObjCoords.width = x - createdObjCoords.startpointX;
+            }
+            if (y < createdObjCoords.startpointY) {
+              createdObjCoords.top = y;
+              createdObjCoords.height = createdObjCoords.startpointY - y;
+            } else {
+              createdObjCoords.height = y - createdObjCoords.startpointY;
+            }
+
+            createdObjCoords.endpointX = x;
+            createdObjCoords.endpointY = y;
+
+            activeObjOnFCanv = updateCreatedObjOnFCanv(
+              fabricCanvas,
+              activeObjOnFCanv,
+              createdObjCoords
+            );
+
+            console.log(createdObjCoords);
+
+            createdObjCoords = { left: 0, top: 0, width: 1, height: 1 };
           }
-          if (y < createdObjCoords.top) {
-            createdObjCoords.height = createdObjCoords.top - y;
-            createdObjCoords.top = y;
-          } else {
-            createdObjCoords.height = y - createdObjCoords.top;
-          }
-
-          updateCreatedObjOnFCanv(
-            fabricCanvas,
-            activeObjOnFCanv,
-            createdObjCoords
-          );
-
-          console.log(createdObjCoords);
-
-          createdObjCoords = { left: 0, top: 0, width: 1, height: 1 };
         }
       });
 
@@ -301,7 +475,43 @@ class CanvasComponent extends React.Component {
         // console.log(
         //   ">> mouse-move: " + options.e.clientX + "x" + options.e.clientY
         // );
+        if (activeObjOnFCanv !== null && createdObjType !== "brush") {
+          let { clientX: x, clientY: y } = checkClientCoords(
+            fabricCanvas.getPointer()
+          );
+
+          if (x < createdObjCoords.startpointX) {
+            createdObjCoords.left = x - 1;
+            createdObjCoords.width = createdObjCoords.startpointX - x - 1;
+          } else {
+            createdObjCoords.width = x - createdObjCoords.startpointX - 1;
+          }
+          if (y < createdObjCoords.startpointY) {
+            createdObjCoords.top = y - 1;
+            createdObjCoords.height = createdObjCoords.startpointY - y - 1;
+          } else {
+            createdObjCoords.height = y - createdObjCoords.startpointY - 1;
+          }
+          // createdObjCoords.width = x - createdObjCoords.left;
+          // createdObjCoords.height = y - createdObjCoords.top;
+
+          createdObjCoords.endpointX = x;
+          createdObjCoords.endpointY = y;
+
+          activeObjOnFCanv = updateCreatedObjOnMouseMove(
+            fabricCanvas,
+            activeObjOnFCanv,
+            createdObjCoords,
+            null,
+            createdObjType
+          );
+
+          // console.log(createdObjCoords);
+
+          // createdObjCoords = { left: 0, top: 0, width: 1, height: 1 };
+        }
       });
+
       this.props.initFabricCanvas(fabricCanvas);
     }
     //использовать при обновлении

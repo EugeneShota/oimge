@@ -7,15 +7,15 @@ import "./EditTools.css";
 
 import { toggleClassInEl, oneActivBtn } from "../../main";
 const TOOLS = [
-  "brush",
   "rectangle",
-  "circle",
-  "rows",
+  "ellipse",
   "line",
   "text",
+  "brush",
+  "rows",
   "cropp",
   "rectangle-attention",
-  "circle-attention",
+  "ellipse-attention",
   "insert-img",
 ];
 
@@ -30,6 +30,7 @@ export default class EditTools extends React.Component {
           key={index}
           data-tool={item}
           data-toolof={toolOf}
+          title={item}
         >
           {index}
         </div>
