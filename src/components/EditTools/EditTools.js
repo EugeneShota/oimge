@@ -6,6 +6,9 @@ import React from "react";
 import "./EditTools.css";
 
 import { toggleClassInEl, oneActivBtn } from "../../main";
+
+const TOOLS_OF_SELECT = ["simple-select", "group-select"];
+
 const TOOLS = [
   "rectangle",
   "ellipse",
@@ -128,6 +131,12 @@ export default class EditTools extends React.Component {
   render() {
     return (
       <div>
+        <div
+          className="group-tools"
+          onClick={this.selectETool.bind(this, this.props.setSelectedTool)}
+        >
+          {this.createBtnTools(TOOLS_OF_SELECT, "toolOfSelect")}
+        </div>
         <div
           className="group-tools"
           onClick={this.selectETool.bind(this, this.props.setSelectedTool)}

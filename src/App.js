@@ -23,6 +23,7 @@ export default class App extends React.Component {
         toolChange: false,
         toolOfElements: { tool: "rectangle", toolProperties: {} },
         toolOfAppearance: { tool: "color", toolProperties: {} },
+        toolOfSelect: { tool: "simple-select", toolProperties: {} },
       },
       toolId: -1,
     };
