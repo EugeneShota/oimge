@@ -20,10 +20,10 @@ export default class App extends React.Component {
       imgPath: SrcImg,
       imgScale: 1,
       toolSelected: {
-        toolChange: false,
+        toolChange: true,
         toolOfElements: { tool: "rectangle", toolProperties: {} },
         toolOfAppearance: { tool: "color", toolProperties: {} },
-        toolOfSelect: { tool: "simple-select", toolProperties: {} },
+        toolOfSelect: { tool: "", toolProperties: {} },
       },
       toolId: -1,
     };
@@ -120,7 +120,10 @@ export default class App extends React.Component {
         </Row>
         <Row>
           <Col sm={1}>
-            <EditTools setSelectedTool={this.setSelectedTool} />
+            <EditTools
+              setSelectedTool={this.setSelectedTool}
+              toolSelected={this.state.toolSelected}
+            />
           </Col>
           <Col sm={11}>
             <EditArea

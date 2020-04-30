@@ -56,7 +56,7 @@ function createObjOnFCanv(
       break;
     case "rectangle-attention":
       if (funcParam == null) {
-        console.log("funcParam !== undefined");
+        console.log("funcParam !== undefined - addRect");
         activeObjOnFCanv = addRectToFCanv(fCanvas, coords, {
           fillColor: null,
           strokeColor: "orange",
@@ -66,11 +66,11 @@ function createObjOnFCanv(
         console.log("isUpdated");
         let tempObj;
         if (funcParam !== null) {
-          console.log("funcParam !== null");
+          console.log("funcParam !== null - addPath(funcParam)");
           // console.warn(...funcParam);
           tempObj = addPathToFCanv(fCanvas, funcParam);
         } else {
-          console.log("funcParam !!== null");
+          console.log("funcParam !!== null - addPath");
           tempObj = addPathToFCanv(fCanvas, {
             coords,
             style,
@@ -80,8 +80,10 @@ function createObjOnFCanv(
           });
         }
 
-        activeObjOnFCanv = actualRectAtt = tempObj.newRectAtt;
-        rectAtt = tempObj.rectAtt;
+        activeObjOnFCanv = tempObj.newRectAtt;
+        actualRectAtt = tempObj.newRectAtt;
+        rectAtt = tempObj.rectAttArr;
+        console.log("actualRectAtt" + actualRectAtt);
         // console.log(">" + actualRectAtt + " ~ " + rectAtt);
       }
       break;
@@ -155,23 +157,11 @@ function updateCreatedObjOnMouseMove(
   return updatableObj;
 }
 
-function testFunct(targetEl, fCanvas, rectAttArr, actualRectAtt) {
-  let elem = targetEl;
-  console.log("////" + elem.id_borderRectAtt);
+function testFunct(targetEl, fCanvas, funcParam) {
+  // console.log("////" + elem.id_borderRectAtt);
 
-  let { left, top, width, height } = elem;
-
-  // console.log(
-  //   rectAttArr[elem.id_borderRectAtt] +
-  //     " {" +
-  //     left +
-  //     " " +
-  //     top +
-  //     " " +
-  //     width +
-  //     " " +
-  //     height
-  // );
+  let { rectAtt: rectAttArr, actualRectAtt } = funcParam;
+  let { left, top, width, height } = targetEl;
 
   let newRectPath =
     "M" +
@@ -198,20 +188,11 @@ function testFunct(targetEl, fCanvas, rectAttArr, actualRectAtt) {
     {
       coords: { left, top, width, height },
       style: {},
-      borderObj: elem,
+      borderObj: targetEl,
       actualRectAtt,
       rectAttArr,
     }
   );
-
-  // addPathToFCanv(
-  //   fCanvas,
-  //   { left, top, width, height },
-  //   {},
-  //   elem,
-  //   actualRectAtt,
-  //   rectAttArray
-  // );
 }
 
 function addEventToElement(
@@ -298,41 +279,29 @@ function addPathToFCanv(fCanvas, funcParam) {
 
   let { coords, style, borderObj, actualRectAtt, rectAttArr } = funcParam;
   console.log("=== border object: " + borderObj);
-  // let path2 =
-  //   "M0,0v" +
-  //   fCanvas.height +
-  //   "h" +
-  //   fCanvas.width +
-  //   "V0H0z M" +
-  //   (coords.left + coords.width) +
-  //   "," +
-  //   (coords.top + coords.height) +
-  //   "H" +
-  //   coords.left +
-  //   "v-" +
-  //   coords.height +
-  //   "h" +
-  //   coords.width +
-  //   "V" +
-  //   (coords.top + coords.height) +
-  //   "z";
 
+  console.log("fCanvas>>> " + fCanvas);
   let canvPath = "M0,0v" + fCanvas.height + "h" + fCanvas.width + "V0H0z";
 
+  let { scaleX, scaleY } = borderObj;
+  let width = coords.width * scaleX,
+    height = coords.height * scaleY;
   let path21 =
     "M" +
-    (coords.left + coords.width) +
+    (coords.left + width) +
     "," +
-    (coords.top + coords.height) +
+    (coords.top + height) +
     "H" +
     coords.left +
     "v-" +
-    coords.height +
+    height +
     "h" +
-    coords.width +
+    width +
     "V" +
-    (coords.top + coords.height) +
+    (coords.top + height) +
     "z";
+
+  console.log("rectAttArr" + rectAttArr);
 
   rectAttArr[
     borderObj.id_borderRectAtt !== undefined
@@ -348,13 +317,18 @@ function addPathToFCanv(fCanvas, funcParam) {
   let finalyPath = "<svg><path d='" + canvPath + groupRectAttPath + "'/></svg>";
   // console.log(finalyPath);
 
-  let newRectAtt = null;
+  let newRectAtt;
 
   fabric.loadSVGFromString(finalyPath, (objects, options) => {
     let obj = fabric.util.groupSVGElements(objects, options);
-    obj.set({ opacity: 0.65, selectable: false });
+    obj.set({ opacity: 0.65, selectable: false, lockRotation: true });
 
-    borderObj.set({ id_borderRectAtt: rectAttArr.length - 1 });
+    if (borderObj.id_borderRectAtt === undefined) {
+      borderObj.set({
+        id_borderRectAtt: rectAttArr.length - 1,
+        lockRotation: true,
+      });
+    }
 
     fCanvas.remove(actualRectAtt);
     fCanvas.add(obj);
@@ -362,7 +336,9 @@ function addPathToFCanv(fCanvas, funcParam) {
     // let groupRectAtt = new fabric.Group([borderObj, obj]);
     // fCanvas.remove(borderObj);
     // fCanvas.add(groupRectAtt);
-    fCanvas.renderAll();
+
+    // fCanvas.renderAll();
+
     newRectAtt = obj;
   });
 
@@ -371,15 +347,10 @@ function addPathToFCanv(fCanvas, funcParam) {
 
   // let pathF = new fabric.Path(path2, { opacity: 0.5, selectable: false });
 
-  // let pathF2 = new fabric.PathGroup([], { opacity: 0.5, selectable: false });
-  // fCanvas.add(pathF);
-  // pathF.moveTo(0);
-
-  // console.log(">> GROUP <<" + groupF);
   // borderObj.on("modified", (options) => {
   //   alert(options + " - " + fCanvas.getActiveObject());
   // });
-  return { newRectAtt, rectAtt: rectAttArr };
+  return { newRectAtt, rectAttArr };
 }
 
 function freeDrawingToFCanv(fCanvas, style) {
@@ -642,8 +613,9 @@ class CanvasComponent extends React.Component {
         //   ">> mouse-move: " + options.e.clientX + "x" + options.e.clientY
         // );
         if (
-          options.target !== null &&
-          options.target.id_borderRectAtt !== undefined
+          (options.target !== null &&
+            options.target.id_borderRectAtt !== undefined) ||
+          (activeObjOnFCanv !== null && activeObjOnFCanv.type === "path")
         ) {
           return;
         }
@@ -652,7 +624,7 @@ class CanvasComponent extends React.Component {
           let { clientX: x, clientY: y } = checkClientCoords(
             fabricCanvas.getPointer()
           );
-
+          console.log(">MOVE< activeObjOnFCanv: " + activeObjOnFCanv);
           if (x < createdObjCoords.startpointX) {
             createdObjCoords.left = x - 1;
             createdObjCoords.width = createdObjCoords.startpointX - x - 1;
@@ -671,7 +643,7 @@ class CanvasComponent extends React.Component {
           createdObjCoords.endpointX = x;
           createdObjCoords.endpointY = y;
 
-          activeObjOnFCanv = updateCreatedObjOnMouseMove(
+          updateCreatedObjOnMouseMove(
             fabricCanvas,
             activeObjOnFCanv,
             createdObjCoords,
@@ -687,11 +659,27 @@ class CanvasComponent extends React.Component {
 
       fabricCanvas.on("object:moving", (options) => {
         if (options.target.id_borderRectAtt !== undefined) {
-          if (actualRectAtt !== null) {
+          if (true) {
             fabricCanvas.remove(actualRectAtt);
-            actualRectAtt = null;
+            // actualRectAtt = null;
           }
           // testFunct(options.target, fabricCanvas, rectAtt, actualRectAtt);
+        }
+      });
+
+      fabricCanvas.on("object:scaling", (options) => {
+        // console.log("--Scaling--");
+        if (options.target.id_borderRectAtt !== undefined) {
+          console.log(options.target.scaleX);
+          fabricCanvas.remove(actualRectAtt);
+        }
+      });
+
+      fabricCanvas.on("object:scaled", (options) => {
+        // console.log("--Scaled--");
+        if (options.target.id_borderRectAtt !== undefined) {
+          console.log("--Scaled RectAtt--");
+          testFunct(options.target, fabricCanvas, { rectAtt, actualRectAtt });
         }
       });
 
@@ -699,7 +687,9 @@ class CanvasComponent extends React.Component {
         console.log("--moved--");
         if (options.target.id_borderRectAtt !== undefined) {
           console.log("-- moved RectAtt --");
-          testFunct(options.target, fabricCanvas, rectAtt, actualRectAtt);
+          console.log("actualRectAtt " + actualRectAtt);
+          testFunct(options.target, fabricCanvas, { rectAtt, actualRectAtt });
+          // fabricCanvas.renderAll();
         }
         console.log(actualRectAtt);
       });

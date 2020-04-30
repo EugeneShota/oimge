@@ -30,11 +30,12 @@ function oneActivBtn(activEl, clName) {
   let parentEl = activEl.parentNode;
   let siblingEl = parentEl.childNodes;
   for (let i = 0; i < siblingEl.length; i++) {
-    if (siblingEl[i] === activEl) {
-      toggleClassInEl([]);
-    } else {
+    if (siblingEl[i] !== activEl) {
       siblingEl[i].classList.remove(clName);
     }
+    // else {
+    // toggleClassInEl([]);
+    // }
   }
 }
 

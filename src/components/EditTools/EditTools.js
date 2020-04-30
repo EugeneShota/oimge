@@ -9,7 +9,7 @@ import { toggleClassInEl, oneActivBtn } from "../../main";
 
 const TOOLS_OF_SELECT = ["simple-select", "group-select"];
 
-const TOOLS = [
+const TOOLS_OF_ELEMENTS = [
   "rectangle",
   "ellipse",
   "line",
@@ -22,8 +22,11 @@ const TOOLS = [
   "insert-img",
 ];
 
-const COLOR_TOOLS = ["color", "border-color", "pipette", "gradient"];
+const TOOLS_OF_APPEARANCE = ["color", "border-color", "pipette", "gradient"];
 
+const MULTI_ACTIVE_TOOL = ["toolOfElements", "toolOfAppearance"];
+
+let activeTools, prevTools;
 export default class EditTools extends React.Component {
   createBtnTools(arrTools, toolOf) {
     let bntArr = arrTools.map(function (item, index) {
@@ -117,7 +120,9 @@ export default class EditTools extends React.Component {
     let tool = event.target;
     if (tool.dataset.tool !== undefined && tool.dataset.toolof !== undefined) {
       let toolType = tool.dataset.tool;
-
+      if (activeTools[tool.dataset.toolof].tool === tool.dataset.tool) {
+        return;
+      }
       console.log("> " + event.target.dataset.tool);
       oneActivBtn(tool, "btn-tool-active");
       toggleClassInEl([tool], ["btn-tool-active"]);
@@ -128,7 +133,35 @@ export default class EditTools extends React.Component {
     }
   }
 
+  activateTools(tools) {
+    let btnTools = document.querySelectorAll(".btn-tool");
+    console.log(btnTools);
+    let toolOfElements = tools.toolOfElements.tool,
+      toolOfAppearance = tools.toolOfAppearance.tool,
+      toolOfSelect = tools.toolOfSelect.tool;
+
+    // for (let i = 0; i < btnTools.length; i++) {
+    //   console.log(btnTools[i].dataset.tool);
+    // }
+    for (let i = 0; i < btnTools.length; i++) {
+      console.log(btnTools[i]);
+      if (
+        btnTools[i].dataset.tool === toolOfElements ||
+        btnTools[i].dataset.tool === toolOfAppearance ||
+        btnTools[i].dataset.tool === toolOfSelect
+      ) {
+        oneActivBtn(btnTools[i], "btn-tool-active");
+        toggleClassInEl([btnTools[i]], ["btn-tool-active"]);
+      }
+    }
+  }
+
+  componentDidMount() {
+    this.activateTools(activeTools);
+  }
+
   render() {
+    activeTools = this.props.toolSelected;
     return (
       <div>
         <div
@@ -141,13 +174,13 @@ export default class EditTools extends React.Component {
           className="group-tools"
           onClick={this.selectETool.bind(this, this.props.setSelectedTool)}
         >
-          {this.createBtnTools(TOOLS, "toolOfElements")}
+          {this.createBtnTools(TOOLS_OF_ELEMENTS, "toolOfElements")}
         </div>
         <div
           className="group-tools"
           onClick={this.selectETool.bind(this, this.props.setSelectedTool)}
         >
-          {this.createBtnTools(COLOR_TOOLS, "toolOfAppearance")}
+          {this.createBtnTools(TOOLS_OF_APPEARANCE, "toolOfAppearance")}
         </div>
       </div>
     );
