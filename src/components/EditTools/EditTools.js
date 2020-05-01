@@ -24,7 +24,7 @@ const TOOLS_OF_ELEMENTS = [
 
 const TOOLS_OF_APPEARANCE = ["color", "border-color", "pipette", "gradient"];
 
-const MULTI_ACTIVE_TOOL = ["toolOfElements", "toolOfAppearance"];
+const NOT_MULTI_ACTIVE_TOOL = ["toolOfElements", "toolOfSelect"];
 
 let activeTools, prevTools;
 export default class EditTools extends React.Component {
@@ -118,13 +118,27 @@ export default class EditTools extends React.Component {
 
   selectETool(cb, event) {
     let tool = event.target;
+    console.log("select: " + tool.dataset.toolof + " " + tool.dataset.tool);
+
     if (tool.dataset.tool !== undefined && tool.dataset.toolof !== undefined) {
+      if (NOT_MULTI_ACTIVE_TOOL.includes(tool.dataset.toolof)) {
+      }
       let toolType = tool.dataset.tool;
-      if (activeTools[tool.dataset.toolof].tool === tool.dataset.tool) {
+      console.log("!==undef");
+
+      if (
+        tool.dataset.tool === activeTools[tool.dataset.toolof].tool ||
+        tool.dataset.tool === prevTools
+      ) {
+        console.log(
+          activeTools[tool.dataset.toolof].tool + "===" + tool.dataset.tool
+        );
+
         return;
       }
-      console.log("> " + event.target.dataset.tool);
-      oneActivBtn(tool, "btn-tool-active");
+      prevTools = tool.dataset.tool;
+      console.log("> " + tool.dataset.tool);
+      oneActivBtn(tool, "btn-tool-active", NOT_MULTI_ACTIVE_TOOL);
       toggleClassInEl([tool], ["btn-tool-active"]);
       cb(tool.dataset.tool, tool.dataset.toolof);
       // this.props.setSelectedTool(toolType);
@@ -137,27 +151,35 @@ export default class EditTools extends React.Component {
     let btnTools = document.querySelectorAll(".btn-tool");
     console.log(btnTools);
     let toolOfElements = tools.toolOfElements.tool,
-      toolOfAppearance = tools.toolOfAppearance.tool,
-      toolOfSelect = tools.toolOfSelect.tool;
+      toolOfAppearance = tools.toolOfAppearance.tool;
+    // toolOfSelect = tools.toolOfSelect.tool;
+    let countActiveBtn = 0,
+      activeTool;
 
-    // for (let i = 0; i < btnTools.length; i++) {
-    //   console.log(btnTools[i].dataset.tool);
-    // }
     for (let i = 0; i < btnTools.length; i++) {
       console.log(btnTools[i]);
-      if (
-        btnTools[i].dataset.tool === toolOfElements ||
-        btnTools[i].dataset.tool === toolOfAppearance ||
-        btnTools[i].dataset.tool === toolOfSelect
-      ) {
-        oneActivBtn(btnTools[i], "btn-tool-active");
+
+      if (btnTools[i].dataset.tool === toolOfElements) {
         toggleClassInEl([btnTools[i]], ["btn-tool-active"]);
+        activeTool = btnTools[i];
+        countActiveBtn++;
       }
+
+      if (btnTools[i].dataset.tool === toolOfAppearance) {
+        // oneActivBtn(btnTools[i], "btn-tool-active");
+        toggleClassInEl([btnTools[i]], ["btn-tool-active"]);
+        countActiveBtn++;
+      }
+      // if (btnTools[i].dataset.tool === toolOfSelect) {
+      //   toggleClassInEl([btnTools[i]], ["btn-tool-active"]);
+      //   countActiveBtn++;
+      // }
+      if (countActiveBtn === 2) return activeTool;
     }
   }
 
   componentDidMount() {
-    this.activateTools(activeTools);
+    prevTools = this.activateTools(activeTools);
   }
 
   render() {

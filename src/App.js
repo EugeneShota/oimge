@@ -49,16 +49,33 @@ export default class App extends React.Component {
 
   setSelectedTool(tool, toolOf, toolProperties = {}) {
     if (tool && toolOf) {
-      this.setState((prevState) => ({
-        toolSelected: {
-          ...prevState.toolSelected,
-          toolChange: true,
-          [toolOf]: {
-            tool: tool,
-            toolProperties: toolProperties,
+      if (toolOf === "toolOfElements" || toolOf === "toolOfSelect") {
+        this.setState((prevState) => ({
+          toolSelected: {
+            ...prevState.toolSelected,
+            toolChange: true,
+            [toolOf]: {
+              tool: tool,
+              toolProperties: toolProperties,
+            },
+            [toolOf === "toolOfElements" ? "toolOfSelect" : "toolOfElements"]: {
+              tool: "",
+              toolProperties: {},
+            },
           },
-        },
-      }));
+        }));
+      } else {
+        this.setState((prevState) => ({
+          toolSelected: {
+            ...prevState.toolSelected,
+            toolChange: true,
+            [toolOf]: {
+              tool: tool,
+              toolProperties: toolProperties,
+            },
+          },
+        }));
+      }
     }
   }
 

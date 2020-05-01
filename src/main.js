@@ -26,9 +26,21 @@ function toggleClassInEl(arrEl = [], arrCl = []) {
   }
 }
 
-function oneActivBtn(activEl, clName) {
-  let parentEl = activEl.parentNode;
-  let siblingEl = parentEl.childNodes;
+function oneActivBtn(activEl, clName, notMultiActiveTool = []) {
+  let toolOf = activEl.dataset.toolof,
+    parentEl = activEl.parentNode,
+    siblingEl = parentEl.childNodes;
+
+  if (notMultiActiveTool.includes(toolOf)) {
+    let activeTools = document.querySelectorAll("." + clName);
+    for (let i = 0; i < activeTools.length; i++) {
+      if (notMultiActiveTool.includes(activeTools[i].dataset.toolof)) {
+        activeTools[i].classList.remove(clName);
+      }
+    }
+    return;
+  }
+
   for (let i = 0; i < siblingEl.length; i++) {
     if (siblingEl[i] !== activEl) {
       siblingEl[i].classList.remove(clName);
