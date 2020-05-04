@@ -1,13 +1,19 @@
 import React from "react";
 // import ReactDOM from "react-dom";
 import { fabric } from "fabric/dist/fabric.min.js";
+import { act } from "react-dom/test-utils";
 
 // import { setInitImg } from "../../main.js";
 
 let fabricCanvas;
 let creationObject;
 let activeObjOnFCanv = null;
-let createdObjType = "rectangle";
+let createdObjType = "rectangle",
+  toolOfSelect = "",
+  toolOfAppearance = "";
+
+let prevToolIsSelection = false;
+
 let createdObjCoords = {
   left: 0,
   top: 0,
@@ -18,7 +24,12 @@ let createdObjCoords = {
   endpointX: 1,
   endpointY: 1,
 };
-let createdObjStyle = { fillColor: "orange", strokeColor: "green" };
+
+let createdObjStyle = {
+  fill: "orange", //fillColor
+  stroke: "green", //strokeColor
+  selectable: false,
+};
 
 let rectAtt = [];
 let actualRectAtt = null;
@@ -58,8 +69,9 @@ function createObjOnFCanv(
       if (funcParam == null) {
         console.log("funcParam !== undefined - addRect");
         activeObjOnFCanv = addRectToFCanv(fCanvas, coords, {
-          fillColor: null,
-          strokeColor: "orange",
+          fill: null,
+          stroke: "orange",
+          selectable: false,
         });
       }
       if (isUpdated) {
@@ -89,6 +101,12 @@ function createObjOnFCanv(
       break;
     case "ellipse-attention":
       activeObjOnFCanv = addEllipseToFCanv(fCanvas, coords, style, true);
+      break;
+    case "simple-select":
+      break;
+    case "group-select":
+      break;
+    case "": //если выбран инструмент выделения
       break;
     default:
       console.log("objType is incorrect...");
@@ -157,7 +175,7 @@ function updateCreatedObjOnMouseMove(
   return updatableObj;
 }
 
-function testFunct(targetEl, fCanvas, funcParam) {
+function addRectAtt(targetEl, fCanvas, funcParam) {
   // console.log("////" + elem.id_borderRectAtt);
 
   let { rectAtt: rectAttArr, actualRectAtt } = funcParam;
@@ -211,14 +229,15 @@ function addEventToElement(
 }
 
 function addRectToFCanv(fCanvas, coords, style, shadow = false) {
-  let rectF = new fabric.Rect({
-    left: coords.left,
-    top: coords.top,
-    fill: style.fillColor,
-    stroke: style.strokeColor,
-    width: coords.width,
-    height: coords.height,
-  });
+  // let rectF = new fabric.Rect({
+  //   left: coords.left,
+  //   top: coords.top,
+  //   fill: style.fillColor,
+  //   stroke: style.strokeColor,
+  //   width: coords.width,
+  //   height: coords.height,
+  // });
+  let rectF = new fabric.Rect({ ...coords, ...style });
   fCanvas.add(rectF);
   // rectF.setShadow({ color: "black", offsetX: 0, offsetY: 0, blur: 100 });
   return rectF;
@@ -230,8 +249,7 @@ function addEllipseToFCanv(fCanvas, coords, style, shadow = false) {
     top: coords.top,
     rx: coords.width / 2,
     ry: coords.height / 2,
-    fill: style.fillColor,
-    stroke: style.strokeColor,
+    ...style,
     // radius: coords.width > coords.height ? coords.width / 2 : coords.height / 2,
   });
   fCanvas.add(circleF);
@@ -247,8 +265,7 @@ function addLineToFCanv(fCanvas, coords, style) {
       coords.endpointY,
     ],
     {
-      fill: style.fillColor,
-      stroke: style.strokeColor,
+      ...style,
     }
   );
   fCanvas.add(lineF);
@@ -262,11 +279,10 @@ function addTextToFCanv(
   text = "Double click to change text..."
 ) {
   let textF = new fabric.IText(text, {
-    left: coords.left,
-    top: coords.top,
-    // width: coords.width,
-    // height: coords.height,
+    left: coords.endpointX,
+    top: coords.endpointY,
     fontSize: 20,
+    ...style,
   });
   fCanvas.add(textF);
   return textF;
@@ -321,7 +337,12 @@ function addPathToFCanv(fCanvas, funcParam) {
 
   fabric.loadSVGFromString(finalyPath, (objects, options) => {
     let obj = fabric.util.groupSVGElements(objects, options);
-    obj.set({ opacity: 0.65, selectable: false, lockRotation: true });
+    obj.set({
+      isPathRectAtt: true,
+      opacity: 0.65,
+      selectable: false,
+      lockRotation: true,
+    });
 
     if (borderObj.id_borderRectAtt === undefined) {
       borderObj.set({
@@ -357,7 +378,7 @@ function freeDrawingToFCanv(fCanvas, style) {
   if (fCanvas) {
     fCanvas.isDrawingMode = true;
     // console.log("color: >" + new fabric.Color("#787878").toRgb());
-    fCanvas.freeDrawingBrush.color = style.fillColor;
+    fCanvas.freeDrawingBrush.color = style.fill;
     fCanvas.freeDrawingBrush.width = 5;
   }
   console.log("color: >" + new fabric.Color("#787878").toRgb());
@@ -480,6 +501,19 @@ class CanvasComponent extends React.Component {
     // alert("CanvComp componentDidUpdate()");
     //переделать
     // this.initFabricCanvas(this.props.imgPath);
+    if (prevToolIsSelection) {
+      if (toolOfSelect === "") {
+        this.toggleSelectableObjFCanv(fabricCanvas, toolOfSelect, false, true);
+        prevToolIsSelection = false;
+      } else {
+        this.toggleSelectableObjFCanv(fabricCanvas, toolOfSelect, true);
+      }
+    } else if (toolOfSelect !== "") {
+      this.toggleSelectableObjFCanv(fabricCanvas, toolOfSelect);
+      prevToolIsSelection = true;
+      // return;
+    }
+
     if (
       !this.props.toolSelected.toolChange ||
       prevProps.imgPath !== this.props.imgPath
@@ -491,6 +525,100 @@ class CanvasComponent extends React.Component {
       createdObjType === "brush"
         ? freeDrawingToFCanv(fabricCanvas, createdObjStyle)
         : false;
+  }
+
+  isReadyToCreate(typeCall, tools, target, activeObjOnFCanv) {
+    // if (
+    //   tools.toolOfSelect.tool === "simple-select" &&
+    //   typeCall === "mouse:move"
+    // ) {
+    //   if (
+    //     activeObjOnFCanv !== null &&
+    //     activeObjOnFCanv.id_borderRectAtt !== undefined
+    //   )
+    //     return true;
+
+    //     activeObjOnFCanv.isPathRectAtt !== undefined;
+    // }
+
+    if (
+      tools.toolOfSelect.tool !== "" ||
+      tools.toolOfElements.tool === "brush"
+    ) {
+      return false;
+    }
+
+    if (typeCall === "mouse:down" || typeCall === "mouse:up") {
+      return true;
+    }
+
+    if (typeCall === "mouse:move") {
+      // if (
+      //   (target !== null && target.id_borderRectAtt !== undefined) ||
+      //   (activeObjOnFCanv !== null && activeObjOnFCanv.type === "path")
+      // ) {
+      //   return false;
+      // }
+      if (activeObjOnFCanv !== null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  toggleSelectableObjFCanv(
+    fCanvas,
+    typeToolOfSelect = "",
+    selectToSelect = false,
+    selectToElement = false
+  ) {
+    let objectsFCanv = fCanvas.getObjects();
+
+    if (fCanvas.getActiveObjects().length > 0) {
+      fCanvas.discardActiveObject();
+      fCanvas.renderAll();
+    }
+
+    if (selectToSelect) {
+      fabricCanvas.discardActiveObject();
+
+      for (let i = 0; i < objectsFCanv.length; i++) {
+        if (objectsFCanv[i].id_borderRectAtt === undefined) {
+          continue;
+        }
+        objectsFCanv[i].set(
+          "selectable",
+          typeToolOfSelect === "group-select" ? false : true
+        );
+      }
+
+      fabricCanvas.selection =
+        typeToolOfSelect === "group-select" ? true : false;
+      fabricCanvas.renderAll();
+
+      return;
+    }
+
+    if (typeToolOfSelect === "group-select") {
+      fCanvas.selection = true;
+    } else {
+      fCanvas.selection = false;
+    }
+    console.log(objectsFCanv);
+
+    for (let i = 0; i < objectsFCanv.length; i++) {
+      if (
+        (objectsFCanv[i].id_borderRectAtt !== undefined &&
+          typeToolOfSelect === "group-select") ||
+        objectsFCanv[i].isPathRectAtt !== undefined
+      ) {
+        continue;
+      }
+      objectsFCanv[i].set(
+        "selectable",
+        selectToElement ? false : !objectsFCanv[i].selectable
+      );
+    }
   }
 
   getSizeOFCanvas(canv) {
@@ -539,8 +667,15 @@ class CanvasComponent extends React.Component {
         // console.log("~~~~ options.target " + options.target);
         // console.log("}options" + options.e);
 
-        if (this.props.toolSelected.toolChange && createdObjType !== "brush") {
-          if (!options.target || options.target.type === "path") {
+        if (
+          this.isReadyToCreate(
+            "mouse:down",
+            this.props.toolSelected,
+            options.target,
+            activeObjOnFCanv
+          )
+        ) {
+          if (true) {
             // && createdObjType !== "brush"
             // fabricCanvas.isDrawingMode =
             //   createdObjType === "brush" ? true : false;
@@ -573,8 +708,15 @@ class CanvasComponent extends React.Component {
         // );
         // console.log("target: " + fabricCanvas.getPointer());
 
-        if (this.props.toolSelected.toolChange && createdObjType !== "brush") {
-          if (!options.target || options.target.type === "path") {
+        if (
+          this.isReadyToCreate(
+            "mouse:up",
+            this.props.toolSelected,
+            options.target,
+            activeObjOnFCanv
+          )
+        ) {
+          if (true) {
             let { clientX: x, clientY: y } = checkClientCoords(
               fabricCanvas.getPointer()
             );
@@ -612,15 +754,15 @@ class CanvasComponent extends React.Component {
         // console.log(
         //   ">> mouse-move: " + options.e.clientX + "x" + options.e.clientY
         // );
-        if (
-          (options.target !== null &&
-            options.target.id_borderRectAtt !== undefined) ||
-          (activeObjOnFCanv !== null && activeObjOnFCanv.type === "path")
-        ) {
-          return;
-        }
 
-        if (activeObjOnFCanv !== null && createdObjType !== "brush") {
+        if (
+          this.isReadyToCreate(
+            "mouse:move",
+            this.props.toolSelected,
+            options.target,
+            activeObjOnFCanv
+          )
+        ) {
           let { clientX: x, clientY: y } = checkClientCoords(
             fabricCanvas.getPointer()
           );
@@ -679,7 +821,7 @@ class CanvasComponent extends React.Component {
         // console.log("--Scaled--");
         if (options.target.id_borderRectAtt !== undefined) {
           console.log("--Scaled RectAtt--");
-          testFunct(options.target, fabricCanvas, { rectAtt, actualRectAtt });
+          addRectAtt(options.target, fabricCanvas, { rectAtt, actualRectAtt });
         }
       });
 
@@ -688,10 +830,14 @@ class CanvasComponent extends React.Component {
         if (options.target.id_borderRectAtt !== undefined) {
           console.log("-- moved RectAtt --");
           console.log("actualRectAtt " + actualRectAtt);
-          testFunct(options.target, fabricCanvas, { rectAtt, actualRectAtt });
+          addRectAtt(options.target, fabricCanvas, { rectAtt, actualRectAtt });
           // fabricCanvas.renderAll();
         }
         console.log(actualRectAtt);
+      });
+
+      fabricCanvas.on("path:created", (options) => {
+        options.path.set("selectable", false);
       });
 
       this.props.initFabricCanvas(fabricCanvas);
@@ -708,6 +854,10 @@ class CanvasComponent extends React.Component {
   }
   render() {
     createdObjType = this.props.toolSelected.toolOfElements.tool;
+    toolOfSelect = this.props.toolSelected.toolOfSelect.tool;
+    toolOfAppearance = this.props.toolSelected.toolOfAppearance.tool;
+    if (createdObjType) {
+    }
     console.log("-------Render-------");
     return (
       <div className="canvPlace">
