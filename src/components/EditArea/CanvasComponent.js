@@ -488,15 +488,33 @@ function setInitImg(props) {
   };
 }
 
+function removeObjOnFCanv(fCanvas) {
+  let activeObj = fCanvas.getActiveObjects();
+  fCanvas.discardActiveObject();
+  for (let i = 0; i < activeObj.length; i++) {
+    fCanvas.remove(activeObj[i]);
+  }
+  fCanvas.renderAll();
+}
+
 class CanvasComponent extends React.Component {
   constructor(props) {
     super(props);
     this.refCanv = React.createRef();
   }
+
   componentDidMount() {
     // alert("CanvComp componentDidMount()");
+    document
+      .querySelector("#canvContainer")
+      .addEventListener("keydown", (event) => {
+        console.log("CanvComp - Press: " + event);
+        removeObjOnFCanv(fabricCanvas);
+      });
+
     this.mountFabricCanvas(this.props.imgPath);
   }
+
   componentDidUpdate(prevProps) {
     // alert("CanvComp componentDidUpdate()");
     //переделать
@@ -559,7 +577,7 @@ class CanvasComponent extends React.Component {
       // ) {
       //   return false;
       // }
-      if (activeObjOnFCanv !== null) {
+      if (activeObjOnFCanv !== null && activeObjOnFCanv.type !== "path") {
         return true;
       }
     }
@@ -666,7 +684,7 @@ class CanvasComponent extends React.Component {
         // console.log(">> mouse-down: " + fabricCanvas.getPointer());
         // console.log("~~~~ options.target " + options.target);
         // console.log("}options" + options.e);
-
+        console.log(document.activeElement);
         if (
           this.isReadyToCreate(
             "mouse:down",
@@ -860,7 +878,7 @@ class CanvasComponent extends React.Component {
     }
     console.log("-------Render-------");
     return (
-      <div className="canvPlace">
+      <div id="canvContainer" className="canvPlace">
         <canvas ref={this.refCanv} id="canv" />
       </div>
     );

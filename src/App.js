@@ -32,6 +32,7 @@ export default class App extends React.Component {
     this.saveEditedImg = this.saveEditedImg.bind(this);
     this.setImgScale = this.setImgScale.bind(this);
     this.setSelectedTool = this.setSelectedTool.bind(this);
+    this.docKeyEvent = this.docKeyEvent.bind(this);
   }
 
   setImgScale(scale = 1) {
@@ -127,6 +128,34 @@ export default class App extends React.Component {
       console.log("imgSetup: " + img.name + "; FilePath: " + filePath);
       this.setState({ imgUploaded: true, imgPath: filePath });
     }
+  }
+
+  removeObjOnFCanv(event) {
+    let eventOnCanvCont = new KeyboardEvent("keydown", {
+      bubbles: false,
+      cancelable: true,
+      code: event.code,
+    });
+    document.getElementById("canvContainer").dispatchEvent(eventOnCanvCont);
+  }
+
+  docKeyEvent(event) {
+    console.log(document.activeElement);
+    console.log("KeyDown: " + event.code);
+    if (document.activeElement === document.body) {
+      console.log("active = body");
+      switch (event.code) {
+        case "Delete":
+          this.removeObjOnFCanv(event);
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  componentDidMount() {
+    document.addEventListener("keydown", this.docKeyEvent);
   }
 
   render() {
