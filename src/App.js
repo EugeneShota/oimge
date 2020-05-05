@@ -130,13 +130,15 @@ export default class App extends React.Component {
     }
   }
 
-  removeObjOnFCanv(event) {
+  dispatchEvent(event, elementID) {
     let eventOnCanvCont = new KeyboardEvent("keydown", {
       bubbles: false,
       cancelable: true,
+      event: event,
       code: event.code,
+      ctrlKey: event.ctrlKey,
     });
-    document.getElementById("canvContainer").dispatchEvent(eventOnCanvCont);
+    document.getElementById(elementID).dispatchEvent(eventOnCanvCont);
   }
 
   docKeyEvent(event) {
@@ -144,13 +146,8 @@ export default class App extends React.Component {
     console.log("KeyDown: " + event.code);
     if (document.activeElement === document.body) {
       console.log("active = body");
-      switch (event.code) {
-        case "Delete":
-          this.removeObjOnFCanv(event);
-          break;
-        default:
-          break;
-      }
+
+      this.dispatchEvent(event, "canvContainer");
     }
   }
 

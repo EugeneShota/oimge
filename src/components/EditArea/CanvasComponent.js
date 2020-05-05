@@ -2,6 +2,7 @@ import React from "react";
 // import ReactDOM from "react-dom";
 import { fabric } from "fabric/dist/fabric.min.js";
 import { act } from "react-dom/test-utils";
+import Footer from "../Footer/Footer";
 
 // import { setInitImg } from "../../main.js";
 
@@ -33,6 +34,7 @@ let createdObjStyle = {
 
 let rectAtt = [];
 let actualRectAtt = null;
+let cloneObj = null;
 
 function checkClientCoords(clientXY) {
   if (clientXY) {
@@ -213,6 +215,50 @@ function addRectAtt(targetEl, fCanvas, funcParam) {
   );
 }
 
+function removeRectAtt(fCanvas, element, actualRectAtt, rectAttArr) {
+  if (rectAttArr.length === 1) {
+    fCanvas.remove(element);
+    fCanvas.remove(actualRectAtt);
+    return { newRectAttArr: [], actualRectAtt: null };
+  }
+
+  let fObjects = fCanvas.getObjects();
+  let allRectInRectAtt = [];
+  for (let i = 0; i < fObjects.length; i++) {
+    if (fObjects[i].id_borderRectAtt !== undefined) {
+      allRectInRectAtt.push(fObjects[i]);
+    }
+  }
+
+  let tempRectAttArr = [];
+  for (let i = 0; i < rectAttArr.length; i++) {
+    if (i !== element.id_borderRectAtt) {
+      tempRectAttArr.push(rectAttArr[i]);
+      allRectInRectAtt[i].id_borderRectAtt =
+        i > element.id_borderRectAtt ? i - 1 : i;
+    }
+  }
+
+  fCanvas.remove(element);
+  // if (tempRectAttArr.length === 0) {
+  //   fCanvas.remove(actualRectAtt);
+  //   return { newRectAttArr: [], actualRectAtt: null };
+  // }
+
+  let {
+    newRectAtt: newActualRectAtt,
+    rectAttArr: newRectAttArr,
+  } = addPathToFCanv(fCanvas, {
+    coords: null, //left, top, width, height
+    style: {},
+    borderObj: null, //targetEl
+    actualRectAtt,
+    rectAttArr: tempRectAttArr,
+  });
+
+  return { newRectAttArr, newActualRectAtt };
+}
+
 function addEventToElement(
   fCanvas,
   elementF,
@@ -289,41 +335,39 @@ function addTextToFCanv(
 }
 
 function addPathToFCanv(fCanvas, funcParam) {
-  //передавать тип(прямоугольник\круг) и объект - брать размеры
-  // если ничего не переданно - создаем прямоугольник\круг
-  // в зависимости от типа
-
   let { coords, style, borderObj, actualRectAtt, rectAttArr } = funcParam;
-  console.log("=== border object: " + borderObj);
+  // console.log("=== border object: " + borderObj);
 
-  console.log("fCanvas>>> " + fCanvas);
+  // console.log("fCanvas>>> " + fCanvas);
   let canvPath = "M0,0v" + fCanvas.height + "h" + fCanvas.width + "V0H0z";
 
-  let { scaleX, scaleY } = borderObj;
-  let width = coords.width * scaleX,
-    height = coords.height * scaleY;
-  let path21 =
-    "M" +
-    (coords.left + width) +
-    "," +
-    (coords.top + height) +
-    "H" +
-    coords.left +
-    "v-" +
-    height +
-    "h" +
-    width +
-    "V" +
-    (coords.top + height) +
-    "z";
+  if (coords !== null && borderObj !== null) {
+    let { scaleX, scaleY } = borderObj;
+    let width = coords.width * scaleX,
+      height = coords.height * scaleY;
+    let path21 =
+      "M" +
+      (coords.left + width) +
+      "," +
+      (coords.top + height) +
+      "H" +
+      coords.left +
+      "v-" +
+      height +
+      "h" +
+      width +
+      "V" +
+      (coords.top + height) +
+      "z";
 
-  console.log("rectAttArr" + rectAttArr);
+    // console.log("rectAttArr" + rectAttArr);
 
-  rectAttArr[
-    borderObj.id_borderRectAtt !== undefined
-      ? borderObj.id_borderRectAtt
-      : rectAttArr.length
-  ] = path21;
+    rectAttArr[
+      borderObj.id_borderRectAtt !== undefined
+        ? borderObj.id_borderRectAtt
+        : rectAttArr.length
+    ] = path21;
+  }
 
   let groupRectAttPath = "";
   for (let i = 0; i < rectAttArr.length; i++) {
@@ -344,7 +388,7 @@ function addPathToFCanv(fCanvas, funcParam) {
       lockRotation: true,
     });
 
-    if (borderObj.id_borderRectAtt === undefined) {
+    if (borderObj !== null && borderObj.id_borderRectAtt === undefined) {
       borderObj.set({
         id_borderRectAtt: rectAttArr.length - 1,
         lockRotation: true,
@@ -492,9 +536,48 @@ function removeObjOnFCanv(fCanvas) {
   let activeObj = fCanvas.getActiveObjects();
   fCanvas.discardActiveObject();
   for (let i = 0; i < activeObj.length; i++) {
-    fCanvas.remove(activeObj[i]);
+    if (activeObj[i].id_borderRectAtt === undefined) {
+      fCanvas.remove(activeObj[i]);
+    } else {
+      ({
+        newActualRectAtt: actualRectAtt,
+        newRectAttArr: rectAtt,
+      } = removeRectAtt(fCanvas, activeObj[i], actualRectAtt, rectAtt));
+    }
   }
   fCanvas.renderAll();
+}
+
+function cloneObjFromCanv(fCanvas) {
+  fCanvas.getActiveObject().clone((cloned) => {
+    cloneObj = cloned;
+  });
+}
+
+function pasteObjOnCanv(fCanvas) {
+  cloneObj.clone(function (clonedObj) {
+    fCanvas.discardActiveObject();
+    clonedObj.set({
+      left: clonedObj.left + 10,
+      top: clonedObj.top + 10,
+      evented: true,
+    });
+    if (clonedObj.type === "activeSelection") {
+      // active selection needs a reference to the canvas.
+      clonedObj.canvas = fCanvas;
+      clonedObj.forEachObject(function (obj) {
+        fCanvas.add(obj);
+      });
+      // this should solve the unselectability
+      clonedObj.setCoords();
+    } else {
+      fCanvas.add(clonedObj);
+    }
+    cloneObj.top += 10;
+    cloneObj.left += 10;
+    fCanvas.setActiveObject(clonedObj);
+    fCanvas.requestRenderAll();
+  });
 }
 
 class CanvasComponent extends React.Component {
@@ -507,10 +590,7 @@ class CanvasComponent extends React.Component {
     // alert("CanvComp componentDidMount()");
     document
       .querySelector("#canvContainer")
-      .addEventListener("keydown", (event) => {
-        console.log("CanvComp - Press: " + event);
-        removeObjOnFCanv(fabricCanvas);
-      });
+      .addEventListener("keydown", this.routingKeyEvent.bind(this));
 
     this.mountFabricCanvas(this.props.imgPath);
   }
@@ -543,6 +623,26 @@ class CanvasComponent extends React.Component {
       createdObjType === "brush"
         ? freeDrawingToFCanv(fabricCanvas, createdObjStyle)
         : false;
+  }
+
+  routingKeyEvent(event) {
+    console.log("CanvComp - Press: " + event);
+    let pressedKeys = (event.ctrlKey ? "Ctrl " : "") + event.code;
+
+    console.log("pressedKeys>" + pressedKeys);
+    switch (pressedKeys) {
+      case "Delete":
+        removeObjOnFCanv(fabricCanvas);
+        break;
+      case "Ctrl KeyC":
+        cloneObjFromCanv(fabricCanvas);
+        break;
+      case "Ctrl KeyV":
+        pasteObjOnCanv(fabricCanvas);
+        break;
+      default:
+        break;
+    }
   }
 
   isReadyToCreate(typeCall, tools, target, activeObjOnFCanv) {
