@@ -67,6 +67,9 @@ function createObjOnFCanv(
     case "brush":
       activeObjOnFCanv = freeDrawingToFCanv(fCanvas, style);
       break;
+    case "rows":
+      activeObjOnFCanv = addRowToFCanv(fCanvas, { coords, style });
+      break;
     case "rectangle-attention":
       if (funcParam == null) {
         console.log("funcParam !== undefined - addRect");
@@ -153,6 +156,14 @@ function updateCreatedObjOnMouseMove(
           y2: newCoords.endpointY,
         };
         // console.log(coords);
+        break;
+      case "rows":
+        coords = {
+          x1: newCoords.startpointX,
+          y1: newCoords.startpointY,
+          x2: newCoords.endpointX,
+          y2: newCoords.endpointY,
+        };
         break;
       case "ellipse":
         coords = {
@@ -418,6 +429,111 @@ function addPathToFCanv(fCanvas, funcParam) {
   return { newRectAtt, rectAttArr };
 }
 
+function addRowToFCanv(fCanvas, objProps) {
+  let { coords, style } = objProps;
+
+  let lineF = new fabric.Line(
+    [
+      coords.startpointX,
+      coords.startpointY,
+      coords.endpointX,
+      coords.endpointY,
+    ],
+    { ...style, strokeWidth: 5 }
+  );
+
+  // fCanvas.add(lineF);
+
+  let head = 20;
+  let dx = coords.endpointX - coords.startpointX,
+    dy = coords.endpointY - coords.startpointY;
+
+  let angle = Math.atan2(dy, dx);
+
+  let firstPartHead = new fabric.Line(
+    [
+      coords.endpointX,
+      coords.endpointY,
+      coords.endpointX - head * Math.cos(angle - Math.PI / 6),
+      coords.endpointY - head * Math.sin(angle - Math.PI / 6),
+    ],
+    { ...style, strokeWidth: 5 }
+  );
+  // fCanvas.add(firstPartHead);
+
+  let secondPartHead = new fabric.Line(
+    [
+      coords.endpointX,
+      coords.endpointY,
+      coords.endpointX - head * Math.cos(angle + Math.PI / 6),
+      coords.endpointY - head * Math.sin(angle + Math.PI / 6),
+    ],
+    { ...style, strokeWidth: 5 }
+  );
+
+  // fCanvas.add(secondPartHead);
+
+  let rowF = new fabric.Group([lineF, firstPartHead, secondPartHead], {
+    // top: coords.endpointX,
+    // left: coords.endpointY,
+  });
+  fCanvas.add(rowF);
+  return rowF;
+  /*
+проверять разницу х1-х2 у1-у2
+*/
+
+  // let angle =
+  //   Math.abs(
+  //     Math.atan2(
+  //       coords.startpointX - coords.endpointX,
+  //       coords.startpointY - coords.endpointY
+  //     ) *
+  //       (180 / Math.PI)
+  //   ) % 360;
+
+  // angle = coords.startpointX > coords.endpointX ? 360 - angle : angle;
+
+  // let lineCenterX = (lineF.x1 + lineF.x2) / 2,
+  //   lineCenterY = (lineF.y1 + lineF.y2) / 2,
+  //   deltaX = lineF.left - lineCenterX,
+  //   deltaY = lineF.top - lineCenterY;
+
+  // console.log("deltaX: " + deltaX);
+  // console.log("deltaY: " + deltaY);
+
+  // let triangleF = new fabric.Triangle({
+  //   top:
+  //     (coords.endpointY > coords.startpointY
+  //       ? lineF.get("y2")
+  //       : lineF.get("y1")) + deltaY,
+  //   left:
+  //     (coords.endpointX > coords.startpointX
+  //       ? lineF.get("x2")
+  //       : lineF.get("x1")) + deltaX,
+  //   width: 10,
+  //   height: 20,
+  //   angle,
+  //   ...style,
+  // });
+
+  // fCanvas.add(triangleF);
+
+  // triangleF.set({
+  //   left: coords.endpointX + offsetLeftTriangle,
+  //   top: coords.endpointY + offsetTopTriangle,
+  // });
+
+  // let rowF = new fabric.Group([triangleF, lineF], {
+  //   // top: coords.endpointX,
+  //   // left: coords.endpointY,
+  // });
+  // fCanvas.add(rowF);
+  // console.log("~~~ lineF.angle: " + angle);
+  // return trF;
+  // return lineF;
+}
+
 function freeDrawingToFCanv(fCanvas, style) {
   if (fCanvas) {
     fCanvas.isDrawingMode = true;
@@ -549,35 +665,46 @@ function removeObjOnFCanv(fCanvas) {
 }
 
 function cloneObjFromCanv(fCanvas) {
-  fCanvas.getActiveObject().clone((cloned) => {
-    cloneObj = cloned;
-  });
+  let activeObj = fCanvas.getActiveObject();
+  if (
+    activeObj !== undefined &&
+    activeObj !== null &&
+    activeObj.id_borderRectAtt === undefined
+  ) {
+    activeObj.clone((cloned) => {
+      cloneObj = cloned;
+    });
+  } else {
+    cloneObj = null;
+  }
 }
 
 function pasteObjOnCanv(fCanvas) {
-  cloneObj.clone(function (clonedObj) {
-    fCanvas.discardActiveObject();
-    clonedObj.set({
-      left: clonedObj.left + 10,
-      top: clonedObj.top + 10,
-      evented: true,
-    });
-    if (clonedObj.type === "activeSelection") {
-      // active selection needs a reference to the canvas.
-      clonedObj.canvas = fCanvas;
-      clonedObj.forEachObject(function (obj) {
-        fCanvas.add(obj);
+  if (cloneObj !== null) {
+    cloneObj.clone(function (clonedObj) {
+      fCanvas.discardActiveObject();
+      clonedObj.set({
+        left: clonedObj.left + 10,
+        top: clonedObj.top + 10,
+        evented: true,
       });
-      // this should solve the unselectability
-      clonedObj.setCoords();
-    } else {
-      fCanvas.add(clonedObj);
-    }
-    cloneObj.top += 10;
-    cloneObj.left += 10;
-    fCanvas.setActiveObject(clonedObj);
-    fCanvas.requestRenderAll();
-  });
+      if (clonedObj.type === "activeSelection") {
+        // active selection needs a reference to the canvas.
+        clonedObj.canvas = fCanvas;
+        clonedObj.forEachObject(function (obj) {
+          fCanvas.add(obj);
+        });
+        // this should solve the unselectability
+        clonedObj.setCoords();
+      } else {
+        fCanvas.add(clonedObj);
+      }
+      cloneObj.top += 10;
+      cloneObj.left += 10;
+      fCanvas.setActiveObject(clonedObj);
+      fCanvas.requestRenderAll();
+    });
+  }
 }
 
 class CanvasComponent extends React.Component {

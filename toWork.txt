@@ -19,7 +19,10 @@
 
 6. Добавить insert img
 
-7. Добавить row
+7. Добавить row | in developing
+//https://fooobar.com/questions/166867/draw-arrow-on-canvas-tag
+//https://jsfiddle.net/m46dtq3f/2/
+//https://fooobar.com/questions/1626028/fabricjs-arrow-snapped-to-grid
 
 8. Добавить выбор цвета заливки\границы 
 
@@ -33,6 +36,10 @@
 
 13. Удаление элемента | Done
 
-14. Копирование элементов | ?Done
+14. Копирование элементов | Done
 
 15. Добавить пикселизацию
+
+16. Изменить создание текста
+
+17. Добавить очистку канвы
